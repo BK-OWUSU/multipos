@@ -1,0 +1,126 @@
+(protected)
+
+└── [businessSlug]
+
+    ├── dashboard
+    │
+    ├── products
+    │   ├── page
+    │   ├── new
+    │   └── [productId]
+    │
+    ├── inventory
+    │   ├── page
+    │   ├── receive-stock
+    │   ├── transfers
+    │   ├── adjustments
+    │   └── purchase-orders
+    │
+    ├── customers
+    │
+    ├── employees
+    │
+    ├── reports
+    │
+    ├── shops
+    │   ├── page                # Shop Directory
+    │   ├── new
+    │   │
+    │   └── [shopSlug]
+    │       ├── dashboard
+    │       ├── pos
+    │       ├── inventory
+    │       ├── employees
+    │       ├── customers
+    │       ├── sales
+    │       ├── cash-register
+    │       └── settings
+    │
+    └── settings
+        ├── business-profile
+        ├── taxes
+        ├── billing
+        ├── integrations
+        └── audit-logs
+
+
+
+2######
+(protected)
+└── [businessSlug]
+
+    ├── dashboard
+
+    ├── products
+    │   ├── page
+    │   ├── categories
+    │   ├── brands
+    │   └── [productId]
+
+    ├── inventory
+    │   ├── stock-levels
+    │   ├── receive-stock
+    │   ├── transfers
+    │   └── adjustments
+    |   └── purchase-orders
+
+    ├── customers
+
+    ├── employees
+
+    ├── reports
+    │   ├── sales-summary
+    │   ├── sales-by-employee
+    │   ├── sales-by-payment
+    │   ├── inventory-report
+    │   └── shop-performance
+
+    ├── shops
+    │   ├── page
+    │   ├── create
+    │   │
+    │   └── [shopSlug]
+    │       ├── dashboard
+    │       ├── pos
+    │       ├── inventory
+    │       ├── invoices
+    │       ├── cash-register
+    │       ├── employees
+    │       ├── time-cards
+    │       └── settings
+
+    ├── loyalty
+
+    ├── settings
+    │   ├── access-control
+    │   ├── business-profile
+    │   ├── taxes
+    │   └── billing
+
+    └── help
+#######
+
+//Gemini
+(protected)/
+└── [businessSlug]/
+    ├── layout.tsx                 # Grabs business data, sets up global state
+    │
+    {/* Global Owner/Admin Space */}
+    ├── dashboard/
+    │   └── page.tsx               # Aggregated global summary analytics
+    ├── shops/
+    │   ├── page.tsx               # The "Manage Shops" interface we just built!
+    │   │
+    │   {/* Isolated Shop/Branch Space */}
+    │   └── [shopSlug]/
+    │       ├── layout.tsx         # Validates if user has access to THIS specific shop
+    │       ├── dashboard/
+    │       │   └── page.tsx       # Single-shop isolated metrics dashboard
+    │       ├── pos/
+    │       │   └── page.tsx       # The actual POS terminal view for this shop
+    │       └── inventory/
+    │           └── page.tsx       # Stock specifically inside this branch
+    │
+    {/* Other Global Business Routes */}
+    ├── employees/                 # Global employee management & role assignment
+    └── settings/                  # Global business setup (Taxes, Currencies)

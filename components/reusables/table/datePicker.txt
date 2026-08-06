@@ -1,0 +1,42 @@
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                        variant="outline"
+                                        className={cn(
+                                            "h-8 w-full justify-start text-left font-normal text-[10px] bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white",
+                                            !filterValue && "text-gray-400"
+                                        )}
+                                        >
+                                        <CalendarIcon className="mr-2 h-3 w-3" />
+                                        {/* 1. Check if it's a string specifically */}
+                                        {typeof filterValue === "string" ? (
+                                            format(new Date(filterValue), "PPP")
+                                        ) : (
+                                            <span>Pick date</span>
+                                        )}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar
+                                        mode="single"
+                                        selected={typeof filterValue === "string" ? new Date(filterValue) : undefined}
+                                        onSelect={(date) => 
+                                            column.setFilterValue(date ? date.toISOString() : undefined)
+                                        }
+                                        autoFocus
+                                        />
+                                        {/* 3. Logic for clearing remains the same */}
+                                        {filterValue !== undefined && (
+                                        <div className="border-t p-2">
+                                            <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="w-full text-xs"
+                                            onClick={() => column.setFilterValue(undefined)}
+                                            >
+                                            Clear Filter
+                                            </Button>
+                                        </div>
+                                        )}
+                                    </PopoverContent>
+                                </Popover>

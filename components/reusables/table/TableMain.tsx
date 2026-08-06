@@ -1,0 +1,725 @@
+"use client"
+"use no memo"
+import React, { useMemo } from "react";
+import {DropdownMenu,DropdownMenuContent,DropdownMenuLabel,DropdownMenuSeparator,DropdownMenuCheckboxItem,DropdownMenuTrigger,DropdownMenuItem} from "@/components/ui/dropdown-menu"
+import {Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
+import {TableMeta, flexRender, getCoreRowModel,getSortedRowModel,getFilteredRowModel,getPaginationRowModel,useReactTable,type SortingState,type ColumnFiltersState, type ColumnDef, type ColumnPinningState} from "@tanstack/react-table"
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+// Change icons for Pin/Unpin
+import {Trash2,Ellipsis,ArrowDownUp,ArrowDownAZ,ArrowUpZA,ChevronDown,ChevronsLeft,ChevronsRight,ListFilter,RefreshCw, Search} from "lucide-react"
+import {getSelectionColumn} from "./tableSelectionCheckbox";
+//Export feature "imports"
+import * as XLSX from "xlsx";
+import jsPDF from 'jspdf';
+import autoTable, {RowInput} from "jspdf-autotable";
+import { toast } from "sonner";
+import { humanize } from "@/lib/utils";
+import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue} from "@/components/ui/select"
+import AlertWithDialogue from "../AlertWithDialogue";
+import { AppResponse } from "@/types/auth/auth";
+import { cn } from "@/lib/utils";
+import { TablePinActions } from "./TablePinActions";
+
+
+declare module "@tanstack/react-table" {
+  interface ColumnMeta<TData, TValue> {
+    filterVariant?: "select" | "selectArray" | "text" | "date";
+    trueLabel?: string;
+    falseLabel?: string;
+    options?: {value: string; label: string}[]
+    exportValue?: (row: TData) => string | number | boolean;
+  }
+}
+interface TableProps<TData, TValue> {
+    columns: ColumnDef<TData, TValue>[];
+    data: TData[];
+    searchKey?: string;          
+    placeholder?: string;
+    columnVisibilityFilter?: boolean;
+    tableFilterButtonVisible?: boolean;
+    tableExportButtonVisible?: boolean;
+    checkBoxVisibility?: boolean;
+    loading?: boolean;
+    handleMultipleDelete?: (ids: string[])=> Promise<AppResponse>;
+    handleMultipleToggleStatus?: (ids: string[]) => Promise<AppResponse>;
+    onActionSuccess?: () => void;
+    meta?: TableMeta<TData>;
+    globalFilterFn?: (row: { original: TData }, columnId: string, filterValue: string) => boolean;
+    onPageSizeChange?: (size: number) => void;
+}
+
+export default function TableMain<TData, TValue>({
+    columns, 
+    data, 
+    searchKey, 
+    placeholder, 
+    columnVisibilityFilter, 
+    tableFilterButtonVisible, 
+    tableExportButtonVisible, 
+    checkBoxVisibility, 
+    loading,
+    handleMultipleDelete,
+    handleMultipleToggleStatus, 
+    onActionSuccess,
+    meta,
+    globalFilterFn,
+    onPageSizeChange,
+}:TableProps<TData, TValue>) {
+    const [globalFilter, setGlobalFilter] = useState("");
+    const [sorting, setSorting] = useState<SortingState>([]);
+    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+    const [columnVisibility, setColumnVisibility] = useState({});
+    const [rowSelection, setRowSelection] = useState({});  
+    const finalColumns = useMemo(() => {
+        if (!checkBoxVisibility) return columns;
+        return [getSelectionColumn<TData>(), ...columns];
+    }, [columns, checkBoxVisibility]);
+    const [showColumnFilters, setShowColumnFilters] = useState(false);
+
+    // 1. CHANGE: Use standard TanStack Table Pinning State
+    const [columnPinning, setColumnPinning] = useState<ColumnPinningState>({});
+
+    //React table from tanstack table
+    const table = useReactTable({
+        data,
+        columns: finalColumns,
+        meta,
+        columnResizeMode: "onChange",
+        state: {
+            sorting,
+            columnFilters,
+            globalFilter,
+            columnVisibility,
+            rowSelection,
+            columnPinning, 
+        },
+        enableRowSelection: checkBoxVisibility, 
+        getCoreRowModel: getCoreRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        onSortingChange: setSorting,
+        onColumnFiltersChange: setColumnFilters,
+        onGlobalFilterChange: setGlobalFilter,
+        onColumnVisibilityChange: setColumnVisibility,
+        onRowSelectionChange: setRowSelection,
+        onColumnPinningChange: setColumnPinning, 
+        enablePinning: true, 
+        globalFilterFn: globalFilterFn || "includesString"
+    });
+
+    const handleExport = (format: 'pdf' | 'excel' | 'csv') => {
+    // 1. Determine exactly which rows to parse based on active viewport state selection modifiers
+    const rowsToExport = checkBoxVisibility && table.getFilteredSelectedRowModel().rows.length > 0
+        ? table.getFilteredSelectedRowModel().rows
+        : table.getFilteredRowModel().rows;
+
+    if (rowsToExport.length === 0) {
+        toast.error("No rows selected or available for export.");
+        return;
+    }
+
+    // 2. Clear out tech headers while reserving display items
+    const visibleColumns = table.getVisibleLeafColumns()
+        .filter(col => col.id !== "select" && col.id !== "actions");
+
+    type ExportableValue = string | number | boolean;
+    type ExportRow = Record<string, ExportableValue>;
+
+    // 3. Map selected items explicitly utilizing meta formatting fallbacks
+    const exportData = rowsToExport.map(row => {
+        const rowData: ExportRow = {};
+
+        visibleColumns.forEach(col => {
+        const headerTitle = typeof col.columnDef.header === 'string' 
+            ? col.columnDef.header 
+            : humanize(col.id);
+
+        // Check if a custom column meta formatter is present
+        const customFormatter = col.columnDef.meta?.exportValue;
+
+        if (customFormatter) {
+            rowData[headerTitle] = customFormatter(row.original);
+        } else {
+            // Fall back to the default cell calculation evaluation value
+            const rawValue = row.getValue(col.id);
+            
+            if (typeof rawValue === 'object' && rawValue !== null) {
+            rowData[headerTitle] = JSON.stringify(rawValue);
+            } else {
+            rowData[headerTitle] = (rawValue ?? "") as ExportableValue;
+            }
+        }
+        });
+
+        return rowData;
+    });
+
+    const fileName = `Export_${new Date().getTime()}`;
+
+    // 4. File Asset Compilation Grid Processing Block (Unchanged structure)
+    if (format === 'excel' || format === 'csv') {
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
+        XLSX.writeFile(workbook, `${fileName}.${format === 'excel' ? 'xlsx' : 'csv'}`);
+    } 
+    else if (format === 'pdf') {
+        const doc = new jsPDF('landscape');
+        const headers = [Object.keys(exportData[0])];
+        const body: RowInput[] = exportData.map((row) => Object.values(row) as RowInput);
+
+        autoTable(doc, {
+        head: headers,
+        body: body,
+        theme: 'grid',
+        headStyles: { fillColor: [23, 37, 84] },
+        styles: { fontSize: 8 }
+        });
+        doc.save(`${fileName}.pdf`);
+    }
+    };
+
+    //Check if the 'actions' column is actually pinned right
+    const isActionsPinned = useMemo(() => {
+        // Safely check if 'actions' exists within the right pinning array
+        return columnPinning.right?.includes('actions') ?? false;
+    }, [columnPinning.right]);
+
+    const getPinningStyles = (columnId: string): React.CSSProperties => {
+        if (columnId === 'actions' && isActionsPinned) {
+            return {
+                position: 'sticky',
+                right: 0,
+                zIndex: 2, 
+                boxShadow: '-4px 0 6px -2px rgba(0, 0, 0, 0.1)', // Subtle shadow separating it
+                
+            };
+        }
+        
+        // Handle select column pinning if desired (though standard left stick usually works)
+        if (columnId === 'select') {
+             return {
+                position: 'sticky',
+                left: 0,
+                zIndex: 5,
+                backgroundColor: "#162456"
+             }
+        }
+        return {};
+    };
+
+    return (
+     <TablePinActions.Provider table={table}>   
+    <div className="space-y-4 p-4">
+        <div className="flex items-center  justify-between">
+        {searchKey && (        
+               <div className="relative flex-1 min-w-70">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input 
+                        placeholder={placeholder}
+                        value={globalFilter ?? ""}
+                        onChange={(e) => setGlobalFilter(e.target.value)}
+                        className="pl-9 bg-slate-50/50 border-slate-200 focus-visible:bg-white max-w-sm"
+                    />
+                </div>)
+        }
+          <div className="flex items-center gap-2">
+
+           { tableFilterButtonVisible && (
+                <Button 
+                    variant={showColumnFilters ? "default" : "outline"} 
+                    size="sm"
+                    onClick={() => setShowColumnFilters(!showColumnFilters)}
+                    className="flex items-center p-4 gap-2"
+                >
+                    <ListFilter className="h-4 w-4" />
+                {showColumnFilters ? "Hide Filters" : "Filters"}
+                </Button>
+            )
+            }
+
+            {/* EXPORT DROPDOWN (unchanged) */}
+            {tableExportButtonVisible && (
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="ml-auto">
+                        Export <ChevronDown className="ml-2 h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                    <DropdownMenuLabel>Choose Format</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => handleExport('excel')}>Excel (.xlsx)</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleExport('csv')}>CSV (.csv)</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleExport('pdf')}>PDF (.pdf)</DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>)
+            }
+
+            {columnVisibilityFilter &&
+            (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="ml-auto">
+                            Columns <ChevronDown className="ml-2 h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-fit">
+                        <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {table.getAllColumns()
+                            .filter((column) => column.getCanHide())
+                            .map((column) => {
+                                // 1. Get the raw header or ID
+                                const header = column.columnDef.header;
+                                const rawId = column.id;
+                                const cleanLabel = typeof header === "string" 
+                                ? header 
+                                : humanize(rawId)
+                                return (
+                                <DropdownMenuCheckboxItem
+                                    key={column.id}
+                                    className="capitalize "
+                                    checked={column.getIsVisible()}
+                                    onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                                >
+                                    {cleanLabel}
+                                </DropdownMenuCheckboxItem>
+                                );
+                            })}
+                    </DropdownMenuContent>
+                </DropdownMenu>)
+            }
+            {/* Selection Action all Button */}
+                {/* 🟢 Render Bulk Actions ONLY if checkboxes are enabled AND at least one action handler exists */}
+                {checkBoxVisibility && (handleMultipleDelete || handleMultipleToggleStatus) && (
+                <div className="relative">
+                    <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button 
+                        disabled={table.getFilteredSelectedRowModel().rows.length === 0} 
+                        variant="outline" 
+                        className="ml-auto relative"
+                        >
+                        <Ellipsis className="h-4 w-4" />
+                        
+                        {/* Floating Row Counter Badge */}
+                        {table.getFilteredSelectedRowModel().rows.length > 0 && (
+                            <span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-[12px] font-bold text-white shadow-sm animate-in zoom-in">
+                            {table.getFilteredSelectedRowModel().rows.length}
+                            </span>
+                        )}
+                        </Button>
+                    </DropdownMenuTrigger>
+                    
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Bulk Actions</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        
+                        {/* Only render Toggle Status item if handler is provided */}
+                        {handleMultipleToggleStatus && (
+                        <DropdownMenuItem
+                            onClick={async () => {
+                            const ids = table.getSelectedRowModel().rows.map((row) => (row.original as { id: string }).id);                        
+                            toast.promise(handleMultipleToggleStatus(ids), {
+                                loading: "Updating status...",
+                                success: (res) => {
+                                if (res.success) {
+                                    table.resetRowSelection();
+                                    if (onActionSuccess) onActionSuccess();
+                                    return res.message;
+                                }
+                                throw new Error(res.error);
+                                },
+                                error: (err) => err.message,
+                            });
+                            }}
+                        >
+                            <RefreshCw className="mr-2 h-4 w-4" /> Toggle Status
+                        </DropdownMenuItem>
+                        )}
+
+                        {/* Only render Delete Option if handler is provided */}
+                        {handleMultipleDelete && (
+                        <AlertWithDialogue
+                            button={
+                            <DropdownMenuItem
+                                className="text-destructive"
+                                onSelect={(e) => e.preventDefault()}
+                            >
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                            </DropdownMenuItem>
+                            }
+                            buttonText="Delete"
+                            customVariant="primary"
+                            btnClassName="p-4"
+                            confirmText="Yes"
+                            cancelText="Cancel"
+                            title="Delete Records"
+                            message={`Are you sure you want to delete selected ${table.getFilteredSelectedRowModel().rows.length} records?`}
+                            confirmFunction={async () => {
+                            const selectedRows = table.getSelectedRowModel().rows;
+                            const ids = selectedRows.map((row) => (row.original as { id: string }).id);
+                            if (ids.length > 0) {
+                                toast.promise(handleMultipleDelete(ids), {
+                                loading: `Deleting ${ids.length} selected records...`,
+                                success: (response) => {
+                                    if (response.success) {
+                                    table.resetRowSelection();
+                                    if (onActionSuccess) onActionSuccess();
+                                    return response.message || "Records deleted successfully";
+                                    } else {
+                                    throw new Error(response.error || "Failed to delete");
+                                    }
+                                },
+                                error: (err) => err.message || "An unexpected error occurred",
+                                });
+                            }
+                            }}
+                        />
+                        )}
+                    </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+                )}
+            {/* Selection Action all Button */}
+            </div>
+        </div>
+         {/* Table Content */}
+            <div className="overflow-auto max-h-85 relative">
+             <Table className="w-full">
+                <TableHeader className="sticky top-0 z-10"> 
+                    {table.getHeaderGroups().map((headerGroup) => (
+                    <React.Fragment key={headerGroup.id}>    
+                    <TableRow key={headerGroup.id} className="bg-blue-950 hover:bg-blue-950">
+                        {headerGroup.headers.map((header) => {
+                        const isSelect = header.id === "select";
+                        
+                        // 9. HELPER CSS: Sticky and solid bg logic for header
+                        const pinningStyles = getPinningStyles(header.id);
+                        const isPinnedRightHeader = pinningStyles.position === 'sticky' && pinningStyles.right === 0;
+
+                        return (
+                          <TableHead
+                            key={header.id}
+                            // 10. HELPER CSS: Pinned header must have opaque bg matching header color (bg-blue-950)
+                            className={cn(
+                                `border relative text-white first:rounded-tl-md font-semibold last:rounded-tr-md group ${isSelect ? "p-2" : "px-4"}`,
+                                isPinnedRightHeader ? 'bg-blue-950' : '' 
+                            )}
+                            style={{ 
+                                width: header.getSize(),
+                                ...pinningStyles // Apply sticky CSS
+                            }}
+                            >
+                            {header.isPlaceholder ? null : (
+                                <div className="flex items-center justify-between h-full">
+                                {/* 1. SORTING & CONTENT WRAPPER */}
+                                <div
+                                    className={header.column.getCanSort() 
+                                    ? "flex items-center gap-2 cursor-pointer select-none hover:text-blue-300 flex-1" 
+                                    : "flex items-center gap-2 flex-1"}
+                                    onClick={header.column.getToggleSortingHandler()}>
+                                    {/* Draws either the centered checkbox OR the column name */}
+                                    {flexRender(header.column.columnDef.header, header.getContext())}
+                                    
+                                    {/* Sort Icons (Hidden for selection column) */}
+                                    {!isSelect && header.column.getCanSort() && (
+                                    <span className="text-white hover:text-blue-300">
+                                        {{
+                                        asc: <ArrowDownAZ size={16}/>,
+                                        desc: <ArrowUpZA size={16}/>,
+                                        }[header.column.getIsSorted() as string] ?? <ArrowDownUp size={16} />}
+                                    </span>
+                                    )}
+                                </div>
+
+                                {/* 2. THE RESIZER HANDLE */}
+                                {!isSelect && header.column.getCanResize() && (
+                                    <div
+                                    {...{
+                                        onMouseDown: header.getResizeHandler(),
+                                        onTouchStart: header.getResizeHandler(),
+                                        className: `absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none hover:bg-blue-500 transition-colors ${
+                                        header.column.getIsResizing() ? "bg-blue-600 w-1" : "bg-transparent"
+                                        }`,
+                                    }}
+                                    />
+                                )}
+                                </div>
+                            )}
+                            </TableHead>
+                        );
+                        })}
+                    </TableRow>
+
+                   {/* DYNAMIC FILTER ROW */}
+                    {showColumnFilters && (
+                    <TableRow className="hover:bg-transparent border-none">
+                        {headerGroup.headers.map((header) => {
+                        const isSelect = header.id === "select";
+                        const isActions = header.id === "actions";
+                        const column = header.column;
+                        
+                        // Cast to any to allow for boolean, string, or date comparisons
+                        type FilterValue = string | boolean | undefined;
+                        const filterValue = column.getFilterValue() as FilterValue;
+
+                        const isSelectVariant = column.columnDef.meta?.filterVariant === "select";
+                        const isSelectArrayVariant = column.columnDef.meta?.filterVariant === "selectArray";
+
+                        const firstValue = table.getCoreRowModel().flatRows[0]?.getValue(column.id);
+                        const isDate =
+                            firstValue instanceof Date ||
+                            (typeof firstValue === "string" &&
+                            !isNaN(Date.parse(firstValue)) &&
+                            firstValue.includes("T"));
+                        
+                        // 11. HELPER CSS: Filter row uses standard solid bg (white)
+                        const pinningStyles = getPinningStyles(header.id);
+                        const isPinnedRightHeaderFilter = pinningStyles.position === 'sticky' && pinningStyles.right === 0;
+
+                        return (
+                            <TableHead 
+                                key={`filter-${header.id}`} 
+                                // 12. HELPER CSS: Pinned filter cells must have white bg
+                                className={cn(
+                                    "p-2 border bg-white",
+                                    isPinnedRightHeaderFilter ? 'bg-white' : ''
+                                )}
+                                style={pinningStyles} // Apply sticky CSS
+                            >
+                            {!isSelect && !isActions && column.getCanFilter() ? (
+                                isSelectVariant ? (
+                                <Select
+                                    value={
+                                    filterValue === true ? "true" : 
+                                    filterValue === false ? "false" : 
+                                    "all"
+                                    }
+                                    onValueChange={(val) => {
+                                    let newValue: boolean | undefined;
+                                    if (val === "true") newValue = true;
+                                    else if (val === "false") newValue = false;
+                                    else newValue = undefined;
+                                    column.setFilterValue(newValue);
+                                    }}>
+                                    <SelectTrigger className="h-8 w-full border text-xs focus:ring-1 focus:ring-blue-900">
+                                    <SelectValue placeholder="All" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                    <SelectItem value="all">All</SelectItem>
+                                    <SelectItem value="true">{column.columnDef.meta?.trueLabel || "Yes"}</SelectItem>
+                                    <SelectItem value="false">{column.columnDef.meta?.falseLabel || "No"}</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                )  : isSelectArrayVariant ? (
+                                <Select
+                                    value={(filterValue as string) ?? "all"}
+                                    onValueChange={(val) => {
+                                    column.setFilterValue(
+                                        val === "all" ? undefined : val
+                                    );
+                                    }}
+                                >
+                                    <SelectTrigger className="h-8 w-full border text-xs focus:ring-1 focus:ring-blue-900">
+                                    <SelectValue placeholder="All" />
+                                    </SelectTrigger>
+
+                                    <SelectContent>
+                                    <SelectItem value="all">All</SelectItem>
+                                    {column.columnDef.meta?.options?.map((opt) => (
+                                        <SelectItem
+                                        key={opt.value}
+                                        value={opt.value}
+                                        >
+                                        {opt.label}
+                                        </SelectItem>
+                                    ))}
+                                    </SelectContent>
+                                </Select>
+                                ) : isDate ? (
+                                <Input
+                                    type="date"
+                                    value={(filterValue as string) ?? ""}
+                                    onChange={(e) => column.setFilterValue(e.target.value)}
+                                    className="h-8 text-[10px] bg-white/10 border p-1"
+                                />
+                                ) : (
+                                <Input
+                                    placeholder="Search..."
+                                    value={(filterValue as string) ?? ""}
+                                    onChange={(e) => column.setFilterValue(e.target.value)}
+                                    className="h-8 text-xs border bg-white/10 placeholder:text-gray-400 focus-visible:ring-blue-400"
+                                />
+                                )
+                            ) : null}
+                            </TableHead>
+                        );
+                        })}
+                    </TableRow>
+                    )}
+                </React.Fragment>
+                    ))}
+                </TableHeader>
+
+                <TableBody>
+                  {loading ? (
+                    Array.from({ length: 5 }).map((_, i) => (
+                        <TableRow key={i} className="animate-pulse">
+                        {finalColumns.map((_, j) => (
+                            <TableCell key={j} className="py-4">
+                            <div className="h-4 bg-gray-200 rounded w-full"></div>
+                            </TableCell>
+                        ))}
+                        </TableRow>
+                    ))
+                  ): table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row) => (
+                        <TableRow
+                        key={row.id}
+                        // 13. HELPER CSS: Need group/row to handle hover logic for sticky cells
+                        className="hover:bg-blue-50 z-0 border transition-colors group/row" 
+                        >
+                        {row.getVisibleCells().map((cell) => {
+                        const isSelect = cell.column.id === "select";
+                        
+                        // 14. HELPER CSS: Define pinning CSS for body cells
+                        const pinningStyles = getPinningStyles(cell.column.id);
+                        const isPinnedRightBodyCell = pinningStyles.position === 'sticky' && pinningStyles.right === 0;
+
+                        return (
+                            <TableCell 
+                            key={cell.id} 
+                            // 15. HELPER CSS: Body cells must have White background normally, 
+                            // but must match the hover color (bg-blue-50) when the row is hovered.
+                            className={cn(
+                                `py-3 border bg-white ${isSelect ? "p-1 " : "px-4"} transition-colors`,
+                                // Logic: Standard White, but Row Hover overrides White
+                                isPinnedRightBodyCell ? 'group-hover/row:bg-blue-50 bg-white' : ''
+                            )}
+                            style={pinningStyles} // Apply sticky CSS
+                            >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </TableCell>
+                        );
+                        })}
+                        </TableRow>
+                    ))
+                    ) : (
+                    <TableRow>
+                        <TableCell
+                        colSpan={columns.length}
+                        className="h-32 text-center text-slate-500  italic"
+                        >
+                        No records found.
+                        </TableCell>
+                    </TableRow>
+                    )}
+                </TableBody>
+                </Table>
+            </div>
+            {/* Table Content End */}
+
+            {/* Pagination Controls */}
+            
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2">
+            {/* Left: Metadata */}
+                <div className="flex text-sm text-muted-foreground gap-2 justify-center items-center">
+                  <div>
+                    Showing{" "}
+                    <span className="font-medium">
+                    {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}
+                    </span>{" "}
+                    to{" "}
+                    <span className="font-medium">
+                    {Math.min(
+                        (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+                        table.getFilteredRowModel().rows.length
+                    )}
+                    </span>{" "}
+                    of{" "}
+                    <span className="font-medium">
+                    {table.getFilteredRowModel().rows.length}
+                    </span>{" "}
+                    results
+                </div>
+            </div>
+
+            {/* Right: Controls */}
+            <div className="flex flex-wrap items-center gap-4 lg:gap-8">
+                {/* Rows per page selector */}
+                <div className="flex items-center gap-2">
+                <p className="text-sm font-medium">Rows per page</p>
+                <select
+                    className="h-8 w-20 rounded-md border  text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    value={table.getState().pagination.pageSize}
+                    onChange={(e) => {
+                        const newSize = Number(e.target.value);
+                        table.setPageSize(newSize)
+                        // If a callback is provided for selectedPageSize, invoke it
+                        if (onPageSizeChange) {
+                            onPageSizeChange(newSize);
+                        }
+                    }}
+                >
+                    {[10, 20, 30, 40, 50,200,500,750].map((pageSize) => (
+                    <option key={pageSize} value={pageSize}>
+                        {pageSize}
+                    </option>
+                    ))}
+                </select>
+                </div>
+
+                {/* Page indicator */}
+                <div className="flex w-25 items-center justify-center text-sm font-medium">
+                Page {table.getState().pagination.pageIndex + 1} of{" "}
+                {table.getPageCount()}
+                </div>
+
+                {/* Navigation Buttons */}
+                <div className="flex items-center gap-2">
+                <Button
+                    variant="outline"
+                    className="hidden h-8 w-8 p-0 lg:flex"
+                    onClick={() => table.setPageIndex(0)}
+                    disabled={!table.getCanPreviousPage()}
+                >
+                    <span className="sr-only">Go to first page</span>
+                    {<ChevronsLeft size={16} />}
+                </Button>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => table.previousPage()}
+                    disabled={!table.getCanPreviousPage()}
+                >
+                    Previous
+                </Button>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => table.nextPage()}
+                    disabled={!table.getCanNextPage()}
+                >
+                    Next
+                </Button>
+                <Button
+                    variant="outline"
+                    className="hidden h-8 w-8 p-0 lg:flex"
+                    onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                    disabled={!table.getCanNextPage()}
+                >
+                    <span className="sr-only">Go to last page</span>
+                    {<ChevronsRight size={16} />}
+                </Button>
+                </div>
+            </div>
+        </div>
+    </div>
+    </TablePinActions.Provider>
+  )
+}

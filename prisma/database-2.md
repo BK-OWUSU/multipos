@@ -1,0 +1,1245 @@
+// ── BUSINESS (Tenant) ──────────────────────────────
+model Business {
+  id               String    @id @default(cuid())
+  name             String
+  slug             String    @unique
+  email            String
+  phone            String?
+  address          String?
+  logoUrl          String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  isEmailVerified  Boolean   @default(false)
+  onboardingStep   Int       @default(1) // tracks which step they are on
+  isOnboarded      Boolean   @default(false)
+  workHrsStartTime DateTime?
+  workHrsCloseTime DateTime?
+  termsAgreement   Boolean   @default(false)
+
+  // Localization Fields
+  countryCode    String? // e.g., "GH", "US", "GB"
+  currencyCode   String  @default("GHS") // e.g., "GHS", "USD", "EUR"
+  currencySymbol String  @default("₵") // e.g., "GH₵", "$", "€"
+  locale         String  @default("en-GH") // e.g., "en-GH", "en-US", "de-DE"
+  dateFormat     String?
+
+  employee          Employee[]
+  shops             Shop[]
+  products          Product[]
+  productAttributes VariantAttribute[]
+  customers         Customer[]
+  sales             Sale[]
+  saleItems         SaleItem[]
+  cashSessions      CashSession[]
+  categories        Category[]
+  roles             Role[]
+  discounts         Discount[]
+  auditLogs         AuditLog[]
+  brands            Brand[]
+  userSessionLogs   UserSessionLog[]
+  shopInventories   ShopInventory[]
+  stockTransfers    StockTransfer[]
+  suppliers         Supplier[]
+  purchaseOrders    PurchaseOrder[]
+  payments          Payment[]
+
+  timeCards TimeCard[]
+  loyaltyConfigurations LoyaltyConfiguration[]
+  loyaltyRewards LoyaltyReward[]
+  loyaltyTiers LoyaltyTier[]
+  loyaltyWallets LoyaltyWallet[]
+  loyaltyHistories LoyaltyHistory[]
+  notifications Notification[]
+
+  @@index([slug])
+  @@index([isOnboarded])
+  @@map("businesses")
+}
+
+//OTP Verification 
+model OTPVerification {
+  id        String   @id @default(cuid())
+  userId    String
+  code      String
+  expiresAt DateTime
+  isUsed    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("otp_verifications")
+}
+
+// ── EMPLOYEE (Base table for all employees) ────────────────
+model Employee {
+  id        String  @id @default(cuid())
+  customId  String  @unique
+  firstName String
+  lastName  String
+  email     String
+  phone     String?
+  imageUrl  String?
+  fileKey   String?
+
+  // Employment Details
+  designation String?
+  address     String?
+  dateOfBirth DateTime?
+  hireDate    DateTime? @default(now())
+
+  businessId    String
+  roleId        String
+  
+  currentShopId String?
+  assignedShops EmployeeShop[] // Many-to-Many relation to shops
+
+  isActive  Boolean   @default(true)
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  business       Business      @relation(fields: [businessId], references: [id])
+  role           Role          @relation(fields: [roleId], references: [id])
+  openedSessions CashSession[] @relation("OpenedSessions")
+  closedSessions CashSession[] @relation("ClosedSessions")
+
+  // One-to-one with User (if granted system access)
+  user            User?
+  hasSystemAccess Boolean @default(false)
+
+  grantedUsers    User[]     @relation("GrantorRelation")
+  sales           Sale[]     @relation("EmployeeSales")
+  stockLogs       StockLog[]
+  timeCards       TimeCard[]
+  currentShop     Shop?      @relation(fields: [currentShopId], references: [id])
+
+  //Explicitly separate the multi-relation naming descriptors
+  sentTransfers     StockTransfer[] @relation("SentTransfers")
+  receivedTransfers StockTransfer[] @relation("ReceivedTransfers")
+  purchaseOrders    PurchaseOrder[]
+
+  @@unique([email, businessId])
+  @@index([businessId])
+  @@index([email])
+  @@map("employees")
+  loyaltyHistories LoyaltyHistory[]
+  notifications Notification[]
+}
+
+//JUNCTION TABLE FOR EMPLOYEES AND SHOPS (Many-to-Many)
+model EmployeeShop {
+  employeeId String
+  shopId     String
+  businessId String
+
+  assignedAt DateTime @default(now())
+  assignedBy String?
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+  shop     Shop     @relation(fields: [shopId], references: [id])
+
+  @@id([employeeId, shopId])
+}
+
+// ── USER (System access only) ──────────────────────────────
+model User {
+  id                  String @id @default(cuid())
+  employeeId          String @unique // Link to Employee
+
+  password            String
+  accountType         AccountType @default(EMPLOYEE)
+
+  isActive            Boolean   @default(true) 
+  isVerified          Boolean   @default(false)
+  needsPasswordChange Boolean   @default(true) // Force change on first login
+  accessGrantedAt     DateTime  @default(now())
+  accessGrantedBy     String?
+  grantor             Employee? @relation("GrantorRelation", fields: [accessGrantedBy], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  employee         Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  otpVerifications OTPVerification[]
+  auditLogs        AuditLog[]
+  userSessionLogs  UserSessionLog[]
+  createdRoles     Role[]            @relation("RoleCreator")
+  updatedRoles     Role[]            @relation("RoleUpdater")
+
+  @@index([employeeId])
+  @@map("users")
+}
+
+model UserSessionLog {
+  id String @id @default(cuid())
+  userId     String
+  businessId String
+  reason     String? @db.VarChar(250) // e.g., "Login", "Logout", "Session Expired", "Forced Logout by Admin"
+
+  loginAt  DateTime  @default(now())
+  logoutAt DateTime?
+
+  ipAddress String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([businessId])
+  @@index([loginAt])
+  @@map("user_session_logs")
+}
+
+model Role {
+  id          String    @id @default(cuid())
+  name        String
+  permissions String[]
+  access      String[]
+  businessId  String
+  description String?
+  isDeleted   Boolean   @default(false)
+  isSystem    Boolean   @default(false)
+  type        RoleType  @default(TEMPORARY)
+  deletedAt   DateTime?
+  expiresAt   DateTime?
+
+  // 2. Audit Fields
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  // 3. Auditing Relations (IDs)
+  createdById String?
+  updatedById String?
+
+  // New Audit Relations
+  creator User? @relation("RoleCreator", fields: [createdById], references: [id])
+  updater User? @relation("RoleUpdater", fields: [updatedById], references: [id])
+
+  business Business   @relation(fields: [businessId], references: [id])
+  employee Employee[]
+
+  @@index([createdById])
+  @@index([businessId])
+  @@map("roles")
+}
+
+// ── TIME CARD ──────────────────────────────────────
+enum TimeCardStatus {
+  ACTIVE
+  COMPLETED
+  MISSED_CLOCK_OUT
+}
+
+model TimeCard {
+  id         String         @id @default(cuid())
+  customId   String         @unique
+  employeeId String
+  businessId String
+  shopId     String?
+
+  status     TimeCardStatus @default(ACTIVE)
+  clockIn    DateTime
+  clockOut   DateTime?
+  totalHours Decimal?       @db.Decimal(10, 2)
+  date       DateTime       @default(now())
+  notes      String?
+
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  employee   Employee       @relation(fields: [employeeId], references: [id])
+  business   Business       @relation(fields: [businessId], references: [id])
+  shop       Shop?          @relation(fields: [shopId], references: [id])
+
+  @@index([businessId])
+  @@index([employeeId])
+  @@index([shopId])
+  @@index([status])
+  @@map("time_cards")
+}
+
+// ── CATEGORY ───────────────────────────────────────
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  businessId  String
+  description String?
+  createdAt   DateTime  @default(now())
+  isActive    Boolean   @default(true)
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+
+  imageUrl String?
+  fileKey  String?
+
+  business Business  @relation(fields: [businessId], references: [id])
+  products Product[]
+
+  @@index([businessId])
+  @@map("categories")
+}
+
+// ── BRAND ──────────────────────────────────────────
+model Brand {
+  id          String    @id @default(cuid())
+  name        String
+  description String?   @db.Text
+  isActive    Boolean   @default(true)
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+
+  imageUrl String?
+  fileKey  String?
+
+  businessId String
+  business   Business  @relation(fields: [businessId], references: [id])
+  products   Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([businessId, name]) 
+  @@map("brands")
+}
+
+// ── PRODUCT ────────────────────────────────────────
+model Product {
+  id          String  @id @default(cuid())
+  name        String
+  description String? @db.Text
+
+  // Base SKU prefix (e.g., "TEE" for T-shirts)
+  baseSku    String
+  hasVariant Boolean @default(false)
+
+  isActive  Boolean   @default(true)
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+
+  businessId String
+  categoryId String?
+  brandId    String?
+
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  variants  ProductVariant[]
+
+  // Relations
+  business Business  @relation(fields: [businessId], references: [id])
+  category Category? @relation(fields: [categoryId], references: [id])
+  brand    Brand?    @relation(fields: [brandId], references: [id])
+
+  @@unique([businessId, baseSku])
+  @@index([businessId, name])
+  @@index([businessId, categoryId])
+  @@index([businessId, brandId])
+  @@map("products")
+}
+
+// ── PRODUCT VARIANT ──
+model ProductVariant {
+  id        String  @id @default(cuid())
+  productId String
+  sku       String
+  barcode   String?
+
+  // Pricing & Stock 
+  price     Decimal @db.Decimal(10, 2)
+  costPrice Decimal @db.Decimal(10, 2)
+
+  // Physical attributes
+  weight Decimal? @db.Decimal(8, 3)
+  length Decimal? @db.Decimal(8, 2)
+  width  Decimal? @db.Decimal(8, 2)
+  height Decimal? @db.Decimal(8, 2)
+
+  sortOrder Int @default(0)
+
+  isActive  Boolean   @default(true)
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product        Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variantOptions ProductVariantOption[]
+  images         VariantImage[]
+  saleItems      SaleItem[]
+  stockLogs      StockLog[]
+
+  //RELATION: Link to branch inventory matrices
+  shopInventories    ShopInventory[]
+  stockTransferItems StockTransferItem[]
+  purchaseOrderItems PurchaseOrderItem[]
+
+  @@unique([productId, sku])
+  @@index([productId])
+  @@index([sku])
+  @@index([barcode])
+  @@map("product_variants")
+  loyaltyRewards LoyaltyReward[]
+}
+
+// ── VARIANT IMAGE──
+model VariantImage {
+  id        String         @id @default(cuid())
+  variantId String
+  imageUrl  String
+  imageKey  String? // For cloud storage (uploadthing, cloudinary, etc.)
+  sortOrder Int            @default(0)
+  isPrimary Boolean        @default(false) // Main display image  
+  createdAt DateTime       @default(now())
+  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@index([variantId])
+  @@map("variant_images")
+}
+
+// ── PRODUCT ATTRIBUTE ────────
+model VariantAttribute {
+  id         String   @id @default(cuid())
+  businessId String
+  name       String // Examples: "Size", "Color", "Material", "Flavor"
+  sortOrder  Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  business Business                @relation(fields: [businessId], references: [id])
+  options  VariantAttributeValue[]
+
+  // Prevent duplicate attribute names per business
+  @@unique([businessId, name])
+  @@index([businessId])
+  @@map("product_attributes")
+}
+
+// ── PRODUCT VARIANT OPTION ─────────────────────────
+model VariantAttributeValue {
+  id          String   @id @default(cuid())
+  attributeId String
+  value       String // "Blue", "Small", "32GB"
+  createdAt   DateTime @default(now())
+
+  attribute VariantAttribute       @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+  // Join tracking for variants
+  variants  ProductVariantOption[]
+
+  @@unique([attributeId, value]) // Prevents creating "Blue" twice under Color
+  @@index([attributeId])
+  @@map("product_attribute_values")
+}
+
+// ── NEW PIVOT: LINKS VARIANT TO PREDEFINED VALUES ──
+model ProductVariantOption {
+  variantId        String
+  attributeValueId String
+
+  variant        ProductVariant        @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  attributeValue VariantAttributeValue @relation(fields: [attributeValueId], references: [id])
+
+  @@id([variantId, attributeValueId])
+  @@map("product_variant_options")
+}
+
+// ── SHOP ───────────────────────────────────────────
+model Shop {
+  id         String  @id @default(cuid())
+  name       String
+  slug       String  @unique
+  address    String?
+  phone      String?
+  businessId String
+
+  city    String?
+  region  String?
+
+  gpsAddress String?
+
+  latitude  Decimal? @db.Decimal(10, 8)
+  longitude Decimal? @db.Decimal(11, 8)
+
+  openingTime String?
+  closingTime String?
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+
+  business          Business        @relation(fields: [businessId], references: [id])
+  currentEmployees  Employee[]
+  sales             Sale[]
+  timeCards         TimeCard[]
+  customers         Customer[]
+  cashSessions      CashSession[]
+  inventories       ShopInventory[]
+  stockLogs         StockLog[]
+  employeeShops     EmployeeShop[]
+  outgoingTransfers StockTransfer[] @relation("FromShopTransfers")
+  incomingTransfers StockTransfer[] @relation("ToShopTransfers")
+  payments          Payment[]
+
+  @@unique([businessId, slug])
+  @@index([businessId])
+  @@map("shops")
+  auditLogs AuditLog[]
+  loyaltyHistories LoyaltyHistory[]
+  loyaltyConfigShops LoyaltyConfigShop[]
+  notifications Notification[]
+}
+
+model ShopInventory {
+  id               String @id @default(cuid())
+  businessId       String
+  shopId           String
+  productVariantId String
+
+  // Branch-specific tracking targets
+  stock         Int @default(0)
+  lowStockAlert Int @default(5)
+
+  // Optional: Add shop-specific pricing if different branches sell at different rates
+  // price         Decimal?       @db.Decimal(10, 2) 
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Connections
+  business  Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  shop      Shop           @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  variant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+  stockLogs StockLog[]
+
+  // Critical constraints for speed and duplication safety
+  @@unique([shopId, productVariantId]) // One unique record entry per variant, per branch
+  @@index([businessId])
+  @@index([shopId])
+  @@index([productVariantId])
+  @@map("shop_inventories")
+}
+
+// ── DISCOUNT ───────────────────────────────────────
+model Discount {
+  id            String       @id @default(cuid())
+  customId      String       @unique 
+  name          String
+  type          DiscountType @default(PERCENTAGE)
+  description   String?
+  value         Decimal      @db.Decimal(10, 2)
+  isActive      Boolean      @default(true)
+  startDate     DateTime?
+  endDate       DateTime?
+  businessId    String
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+
+  business Business @relation(fields: [businessId], references: [id])
+  sales    Sale[]
+
+  @@index([businessId])
+  @@map("discounts")
+}
+
+// ── STOCK LOG ──────────────────────────────────────
+model StockLog {
+  id               String   @id @default(cuid())
+  action           String?
+  customId         String    @unique 
+  productVariantId String
+  employeeId       String
+  businessId       String
+  shopId           String
+  shopInventoryId  String?
+  change           Int
+  reason           String?
+  createdAt        DateTime @default(now())
+  logType          String?
+  ipAddress        String?
+
+  variant   ProductVariant @relation(fields: [productVariantId], references: [id])
+  employee  Employee       @relation(fields: [employeeId], references: [id])
+  shop      Shop           @relation(fields: [shopId], references: [id]) // 🟢 Add this structural relation
+  inventory ShopInventory? @relation(fields: [shopInventoryId], references: [id])
+
+  @@index([productVariantId, createdAt])
+  @@index([businessId, employeeId])
+  @@index([shopId, createdAt])      //Great for checking stock histories by storefront branch
+  @@index([businessId, createdAt])  // (CRITICAL for auditing whole business history)
+  @@map("stock_logs")
+}
+
+// ── CUSTOMER ────────────────────────────────────────────────────────
+model Customer {
+  id                 String   @id @default(cuid())
+  customId           String   @unique
+  firstName          String
+  lastName           String
+  email              String?
+  phone              String?
+  address            String?
+  firstVisit         DateTime?
+  lastVisit          DateTime?
+  totalVisit         Int      @default(0)
+  status             CustomerStatus @default(ACTIVE)
+  isCreditCustomer   Boolean  @default(false)
+  creditLimit        Decimal  @default(0) @db.Decimal(10,2)
+  businessId         String
+  // Shop where customer first registered
+  registeredAtShopId String?
+  // Customer's current membership tier
+  loyaltyTierId      String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  isDeleted          Boolean  @default(false)
+  deletedAt          DateTime?
+  // Relations
+  business           Business @relation(fields: [businessId], references: [id])
+  registeredAtShop   Shop? @relation(fields: [registeredAtShopId], references: [id])
+  loyaltyTier        LoyaltyTier? @relation(fields: [loyaltyTierId], references: [id])
+  sales              Sale[]
+  loyaltyWallet      LoyaltyWallet?
+  loyaltyHistory     LoyaltyHistory[]
+
+  @@unique([phone, businessId])
+  @@index([businessId])
+  @@index([firstName, lastName])
+  @@map("customers")
+}
+
+// ─────────────────────────────────────────────────────────────
+// LOYALTY TIERS
+// Bronze, Silver, Gold, Platinum, VIP...
+// Each business can define its own tiers.
+// ─────────────────────────────────────────────────────────────
+
+model LoyaltyTier {
+  id                    String    @id @default(cuid())
+  businessId            String
+  name                  String
+  description           String?   @db.VarChar(255)
+  color                 String?
+  icon                  String?
+  minimumLifetimePoints Int       @default(0)
+  earnMultiplier        Decimal @default(1.00) @db.Decimal(5,2)
+  redemptionMultiplier  Decimal @default(1.00) @db.Decimal(5,2)
+  priority              Int @default(1)
+  isDefault             Boolean @default(false)
+  isActive              Boolean @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  business              Business @relation(fields:[businessId], references:[id], onDelete:Cascade)
+  customers             Customer[]
+
+  @@unique([businessId, name])
+  @@index([businessId])
+  @@map("loyalty_tiers")
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// CUSTOMER LOYALTY WALLET
+// ─────────────────────────────────────────────────────────────
+
+model LoyaltyWallet {
+  id                String @id @default(cuid())
+  customerId        String @unique
+  businessId        String
+  availablePoints   Int @default(0)
+  lifetimeEarned    Int @default(0)
+  lifetimeRedeemed  Int @default(0)
+  lifetimeExpired   Int @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  customer          Customer @relation(fields:[customerId], references:[id], onDelete:Cascade)
+  business          Business @relation(fields:[businessId], references:[id], onDelete:Cascade)
+  transactions      LoyaltyHistory[]
+
+  @@index([businessId])
+  @@map("loyalty_wallets")
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// LOYALTY CONFIGURATION
+// One per business
+// ─────────────────────────────────────────────────────────────
+
+model LoyaltyConfiguration {
+  id                      String @id @default(cuid())
+  businessId              String @unique
+  isEnabled               Boolean @default(false)
+
+  // New field for the global toggle
+  applyToAllShops         Boolean              @default(true)
+
+
+  amountRequiredPerPoint  Decimal @default(10.00) @db.Decimal(10,2)
+  pointValue              Decimal @default(0.10) @db.Decimal(10,2)
+  minimumPointsToRedeem   Int @default(50)
+  maxRedeemPercentage     Int @default(30)
+  pointsExpiryMonths      Int @default(12)
+  earnOnPromotions        Boolean @default(false)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  business                Business @relation(fields:[businessId], references:[id], onDelete:Cascade)
+
+  // New relation link
+  targetShops            LoyaltyConfigShop[]
+  @@map("loyalty_configurations")
+}
+
+model LoyaltyConfigShop {
+  id             String               @id @default(cuid())
+  configId       String
+  shopId         String
+  createdAt      DateTime             @default(now())
+
+  config         LoyaltyConfiguration @relation(fields: [configId], references: [id], onDelete: Cascade)
+  shop           Shop                 @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([configId, shopId])
+  @@map("loyalty_config_shops")
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// REWARD CATALOG
+// ─────────────────────────────────────────────────────────────
+
+model LoyaltyReward {
+  id                String @id @default(cuid())
+  businessId        String
+  title             String
+  description       String? @db.VarChar(255)
+  rewardType        RewardType @default(PRODUCT)
+  pointsRequired    Int
+  rewardValue       Decimal? @db.Decimal(10,2)
+  productVariantId  String?
+  isActive          Boolean @default(true)
+  isDeleted         Boolean @default(false)
+  deletedAt         DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  business          Business @relation(fields:[businessId], references:[id], onDelete:Cascade)
+  productVariant    ProductVariant? @relation(fields:[productVariantId], references:[id])
+  histories         LoyaltyHistory[]
+
+  @@index([businessId])
+  @@map("loyalty_rewards")
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// LOYALTY LEDGER
+// Every points movement is stored here.
+// NEVER update the wallet without inserting here.
+// ─────────────────────────────────────────────────────────────
+
+model LoyaltyHistory {
+  id              String @id @default(cuid())
+  walletId        String
+  customerId      String
+  businessId      String
+  shopId          String?
+  saleId          String?
+  rewardId        String?
+  performedById   String?
+  points          Int
+  type            LoyaltyActionType
+  reason          String? @db.VarChar(255)
+  createdAt       DateTime @default(now())
+
+  wallet          LoyaltyWallet @relation(fields:[walletId], references:[id], onDelete:Cascade)
+  customer        Customer @relation(fields:[customerId], references:[id], onDelete:Cascade)
+  business        Business @relation(fields:[businessId], references:[id], onDelete:Cascade)
+  shop            Shop? @relation(fields:[shopId], references:[id])
+  sale            Sale? @relation(fields:[saleId], references:[id])
+  reward          LoyaltyReward? @relation(fields:[rewardId], references:[id])
+  performedBy     Employee? @relation(fields:[performedById], references:[id])
+
+  @@index([walletId])
+  @@index([customerId])
+  @@index([businessId])
+  @@index([shopId])
+  @@index([saleId])
+
+  @@map("loyalty_history")
+}
+
+
+
+// ─────────────────────────────────────────────────────────────
+// LOYALTY ENUMS
+// ─────────────────────────────────────────────────────────────
+
+enum CustomerStatus {
+  ACTIVE
+  BLOCKED
+}
+
+enum LoyaltyActionType {
+  EARNED
+  REDEEMED
+  MANUAL_ADD
+  MANUAL_REMOVE
+  EXPIRED
+  REVERSAL
+}
+
+enum RewardType {
+  PRODUCT
+  FIXED_AMOUNT
+  PERCENTAGE
+  FREE_SERVICE
+}
+// ── SALE ───────────────────────────────────────────
+model Sale {
+  id             String      @id @default(cuid())
+  customId       String    @unique 
+  totalAmount    Decimal     @db.Decimal(10, 2)
+  discountAmount Decimal     @default(0) @db.Decimal(10, 2)
+  paymentType    PaymentType @default(CASH) // Keep to identify overall strategy (CASH, MOMO, SPLIT)
+  status         SaleStatus  @default(COMPLETED)
+  businessId     String
+  shopId         String
+  employeeId     String
+  customerId     String?
+  discountId     String?
+  cashSessionId  String?
+  createdAt      DateTime    @default(now())
+
+  business    Business     @relation(fields: [businessId], references: [id])
+  shop        Shop         @relation(fields: [shopId], references: [id])
+  employee    Employee     @relation("EmployeeSales", fields: [employeeId], references: [id])
+  customer    Customer?    @relation(fields: [customerId], references: [id])
+  discount    Discount?    @relation(fields: [discountId], references: [id])
+  cashSession CashSession? @relation(fields: [cashSessionId], references: [id])
+  items       SaleItem[]
+  invoice     Invoice?
+  payments    Payment[]
+  loyaltyHistories LoyaltyHistory[]
+
+  @@index([businessId, createdAt])
+  @@index([businessId, shopId])
+  @@index([shopId, createdAt])
+  @@index([businessId])
+  @@index([employeeId])
+  @@index([businessId, status]) // Useful for filtering "Pending" or "Cancelled" sales
+  @@map("sales")
+}
+
+// ── SALE ITEM ──────────────────────────────────────
+model SaleItem {
+  id               String         @id @default(cuid())
+  saleId           String
+  productVariantId String
+  businessId       String
+  quantity         Int
+  unitPrice        Decimal        @db.Decimal(10, 2)
+  costPrice        Decimal        @db.Decimal(10, 2) // Capture cost at the exact moment of sale
+  subtotal         Decimal        @db.Decimal(10, 2)
+  sale             Sale           @relation(fields: [saleId], references: [id])
+  variant          ProductVariant @relation(fields: [productVariantId], references: [id])
+  business         Business       @relation(fields: [businessId], references: [id])
+
+  @@index([businessId])
+  @@map("sale_items")
+}
+
+model Payment {
+  id         String        @id @default(cuid())
+  customId   String    @unique 
+  saleId     String
+  businessId String
+  shopId     String
+  amount     Decimal       @db.Decimal(10, 2)
+  method     PaymentType
+  status     PaymentStatus @default(COMPLETED)
+
+  reference   String? @unique
+  provider    String? @default("PAYSTACK")
+  momoNetwork String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ── 🟢 EXPLICIT RELATIONAL LINKS ──────────────────
+  sale     Sale     @relation(fields: [saleId], references: [id], onDelete: Restrict)
+  business Business @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  shop     Shop     @relation(fields: [shopId], references: [id], onDelete: Restrict)
+
+  @@index([saleId])
+  @@index([businessId])
+  @@index([shopId])
+  @@index([businessId, method])
+  @@map("payments")
+}
+
+model StockTransfer {
+  id          String           @id @default(cuid())
+  customId    String           @unique  
+  businessId  String
+  fromShopId  String
+  toShopId    String
+  status      TransferStatus   @default(PENDING) // e.g., PENDING, IN_TRANSIT, COMPLETED, DISCREPANCY
+  priority    TransferPriority @default(NORMAL)
+  notes       String?          @db.VarChar(250)
+
+  // Sender tracking
+  createdById String
+  createdAt   DateTime @default(now())
+
+  // 🟢 ADD THIS: Receiver tracking for the receiving shop context
+  receivedById  String? // Nullable until the receiving clerk marks it received
+  receivedAt    DateTime? // Timestamp when stock actually hit the destination floor
+  receiverNotes String?   @db.VarChar(250) // Remarks/reasons entered by the receiver clerk
+
+  updatedAt DateTime @updatedAt
+
+  // Inverse relation tracking all products tied to this invoice record
+  items StockTransferItem[]
+
+  // Relations
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  fromShop Shop     @relation("FromShopTransfers", fields: [fromShopId], references: [id])
+  toShop   Shop     @relation("ToShopTransfers", fields: [toShopId], references: [id])
+
+  // 🟢 SPLIT RELATION: Differentiate between who sent it and who received it
+  createdBy  Employee  @relation("SentTransfers", fields: [createdById], references: [id])
+  receivedBy Employee? @relation("ReceivedTransfers", fields: [receivedById], references: [id])
+
+  @@index([businessId])
+  @@index([fromShopId])
+  @@index([toShopId])
+}
+
+model StockTransferItem {
+  id               String @id @default(cuid())
+  transferId       String
+  productVariantId String
+
+  // 🟢 THE SPLIT QUANTITY FIX:
+  quantity         Int // Acts as "Expected Qty" (What the sending shop dispatched)
+  receivedQuantity Int? //"Received Qty" (Populated when the destination shop clicks "Mark as Received")
+
+  unitValueAtTime Decimal @db.Decimal(10, 2)
+
+  // Relations
+  transfer       StockTransfer  @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  productVariant ProductVariant @relation(fields: [productVariantId], references: [id])
+
+  @@index([transferId])
+  @@index([productVariantId])
+}
+
+model PurchaseOrder {
+  id         String              @id @default(cuid())
+  customId   String    @unique 
+  businessId String
+  supplierId String
+  status     PurchaseOrderStatus @default(PENDING)
+
+  // Financial Tracking
+  totalAmount Decimal @db.Decimal(10, 2) // Sum of all item costs
+  notes       String? @db.VarChar(250) // Matches your 250-character UI constraint!
+
+  // Audit Logs
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Inverse Relations
+  items PurchaseOrderItem[]
+
+  // Relations
+  business  Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  supplier  Supplier @relation(fields: [supplierId], references: [id])
+  createdBy Employee @relation(fields: [createdById], references: [id])
+
+  @@index([businessId])
+  @@index([supplierId])
+}
+
+model PurchaseOrderItem {
+  id               String @id @default(cuid())
+  purchaseOrderId  String
+  productVariantId String
+
+  // Quantity tracking for discrepancy validation
+  orderedQuantity  Int // What you expected from the vendor
+  receivedQuantity Int @default(0) // What physically arrived on the floor
+
+  // Price Snapshot (Crucial for Cost of Goods Sold [COGS] accounting)
+  unitCost Decimal @db.Decimal(10, 2) // Wholesale cost at time of purchase
+
+  // Relations
+  purchaseOrder  PurchaseOrder  @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  productVariant ProductVariant @relation(fields: [productVariantId], references: [id])
+
+  @@index([purchaseOrderId])
+  @@index([productVariantId])
+}
+
+model Supplier {
+  id         String  @id @default(cuid())
+  name       String // e.g., "Coca-Cola Ghana Bottling Plant"
+  email      String?
+  phone      String
+  address    String?
+  businessId String
+
+  // Inverse relation to see history of purchases from this supplier
+  orders PurchaseOrder[]
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+model CashSession {
+  id          String  @id @default(cuid())
+  customId    String   @unique
+  businessId  String
+  shopId      String
+  openedById  String // Employee who opened the register
+  closedById  String? // Employee who closed and counted the register
+
+  status      SessionStatus @default(OPEN)
+  openedAt    DateTime      @default(now())
+  closedAt    DateTime?
+
+  // Cash accountability fields
+  startFloat   Decimal  @db.Decimal(10, 2)
+  endFloat     Decimal? @db.Decimal(10, 2)
+  expectedCash Decimal? @db.Decimal(10, 2) // Calculated: startFloat + cashSales
+  actualCash   Decimal? @db.Decimal(10, 2) // Physical cash counted by employee
+  notes        String?  @db.Text
+
+  // Relations
+  business Business  @relation(fields: [businessId], references: [id])
+  shop     Shop      @relation(fields: [shopId], references: [id])
+  openedBy Employee  @relation("OpenedSessions", fields: [openedById], references: [id])
+  closedBy Employee? @relation("ClosedSessions", fields: [closedById], references: [id])
+
+  sales Sale[] // Connects transactions directly to this cash shift
+
+  @@index([businessId])
+  @@index([shopId])
+  @@map("cash_sessions")
+}
+
+// ── INVOICE ────────────────────────────────────────
+model Invoice {
+  id         String @id @default(cuid())
+  customId   String    @unique 
+
+  // Scope matching your Sale table structure
+  businessId String
+  shopId     String
+
+  // Invoice-specific metadata
+  issuedAt DateTime @default(now())
+  dueDate  DateTime // To calculate the "(7 days)" timeline in your UI
+
+  // Relation (Changed to Restrict to protect audit logs)
+  saleId String @unique
+  sale   Sale   @relation(fields: [saleId], references: [id], onDelete: Restrict)
+
+  @@unique([customId, businessId])
+  @@index([businessId])
+  @@index([shopId])
+  @@map("invoices")
+}
+
+// ── AUDIT LOG ──────────────────────────────────────
+model AuditLog {
+  id         String   @id @default(cuid())
+  action     String
+  entity     String
+  entityId   String
+  oldValue   String?
+  newValue   String?
+  userId     String
+  businessId String
+  shopId     String?  // 🟢 Added for fast branch filtering
+  createdAt  DateTime @default(now())
+  details    String?  @db.Text
+  logType    String?
+  ipAddress  String?
+
+  user     User     @relation(fields: [userId], references: [id])
+  business Business @relation(fields: [businessId], references: [id])
+  shop     Shop?    @relation(fields: [shopId], references: [id]) // Optional link
+
+  @@index([businessId, createdAt])
+  @@index([businessId, shopId])
+  @@index([businessId])
+  @@map("audit_logs")
+}
+
+// ── NOTIFICATION ENGINE ────────────────────────────
+enum NotificationPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  SMS
+  WHATSAPP
+}
+
+enum NotificationCategory {
+  GENERAL
+  STOCK_ALERT
+  CASH_SESSION
+  SALE_COMPLETED
+  PURCHASE_ORDER
+  SYSTEM
+  TIME_CARD
+  EXPENSE_ALERT
+}
+
+model Notification {
+  id          String               @id @default(cuid())
+  businessId  String               // Multi-tenant absolute boundary
+  employeeId  String               // Recipient of the notification
+  shopId      String?              // Optional: Contextual shop source if generated at a specific branch
+
+  title       String               @db.VarChar(100)
+  message     String               @db.VarChar(500)
+  
+  // Categorization to easily group and filter notices
+  category    NotificationCategory @default(GENERAL)
+  
+  // Operational markers
+  priority    NotificationPriority @default(NORMAL)
+  channel     NotificationChannel  @default(IN_APP)
+  
+  // State Tracking
+  isRead      Boolean              @default(false)
+  readAt      DateTime?
+  
+  createdAt   DateTime             @default(now())
+
+  // Relations
+  business    Business             @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  employee    Employee             @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  shop        Shop?                @relation(fields: [shopId], references: [id], onDelete: SetNull)
+
+  @@index([businessId])
+  @@index([employeeId, isRead])    // Critical for pulling "unread only" counts instantly
+  @@index([businessId, createdAt]) // Ideal for running background automated cleanup tasks
+  @@map("notifications")
+}
+
+enum PurchaseOrderStatus {
+  PENDING // PO created but not yet sent/confirmed by supplier
+  ORDERED // Order sent to supplier, awaiting shipment delivery
+  PARTIAL // Goods received, but some items are missing or backordered
+  COMPLETED // All ordered products received successfully
+  CANCELLED // Order cancelled before fulfillment
+}
+
+enum AccountType {
+  OWNER
+  EMPLOYEE
+}
+
+enum SaleStatus {
+  COMPLETED
+  REFUNDED
+  PENDING
+  CANCELLED
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+enum RoleName {
+  OWNER
+  ADMIN
+  MANAGER
+  CASHIER
+  CUSTOM_A
+  CUSTOM_B
+  CUSTOM_C
+}
+
+enum RoleType {
+  SYSTEM
+  CUSTOM
+  TEMPORARY
+}
+
+enum SessionStatus {
+  OPEN
+  CLOSED
+}
+
+enum TransferStatus {
+  PENDING
+  IN_TRANSIT
+  RECEIVED
+  CANCELLED
+}
+
+enum TransferPriority {
+  NORMAL
+  MEDIUM
+  URGENT
+}
+
+// ── UPDATED ENUMS ──────────────────────────────────
+enum PaymentType {
+  CASH
+  MOMO
+  CARD
+  SPLIT
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+//MODEL TO GENERATE CUSTOM_IDS
+model Sequence {
+  id         String   @id @default(cuid())
+
+  businessId String
+  type       String
+
+  currentNo  Int      @default(0)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([businessId, type])
+  @@index([businessId])
+}

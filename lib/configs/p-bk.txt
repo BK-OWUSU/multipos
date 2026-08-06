@@ -1,0 +1,177 @@
+// lib/bulk-import/configs/product-config.ts
+import { z } from 'zod';
+import {BulkImportConfig} from '@/types/schema/bulkImport';
+import { createBulkProductsAction } from '../actions/business/productsActions';
+
+// 1. Define the flat Excel Row Zod Schema
+// This represents exactly how columns look on the raw "Import Data" Excel tab
+export const productExcelRowSchema = z.object({
+  // Parent Container Info
+  name: z.string().min(2, "Product name is required"),
+  baseSku: z.string().min(2, "Base SKU prefix is required").toUpperCase(),
+  description: z.string().optional().nullable(),
+  categoryId: z.string().optional().nullable(),
+  brandId: z.string().optional().nullable(),
+  
+  // Unique Variant Parameters
+  sku: z.string().min(3, "Variant SKU must be at least 3 characters"),
+  barcode: z
+  .union([z.string(), z.number()])
+  .optional()
+  .nullable()
+  .transform((val) => {
+    if (val === undefined || val === null || val === "") return null;
+    return String(val).trim(); // Coerces Excel numbers into strings safely!
+  }),
+  price: z.coerce.number().min(0, "Price cannot be negative"),
+  costPrice: z.coerce.number().min(0, "Cost Price cannot be negative"),
+  stock: z.coerce.number().int().nonnegative(),
+  lowStockAlert: z.coerce.number().int().nonnegative().default(5),
+  
+  // Dimensions
+  weight: z.coerce.number().nonnegative().optional().nullable(),
+  length: z.coerce.number().nonnegative().optional().nullable(),
+  width: z.coerce.number().nonnegative().optional().nullable(),
+  height: z.coerce.number().nonnegative().optional().nullable(),
+
+  // Flattened Attributes columns (Blank strings if the product has no variants)
+  color: z.string().optional().nullable(),
+  size: z.string().optional().nullable(),
+  material: z.string().optional().nullable(),
+});
+
+export type ProductExcelRow = z.infer<typeof productExcelRowSchema>;
+
+// 2. Define the output format your backend/server action expects
+// It perfectly matches your structured `ProductFormValues` type!
+export interface GroupedProductImportPayload {
+  name: string;
+  baseSku: string;
+  description: string | null;
+  hasVariant: boolean;
+  isActive: boolean;
+  categoryId: string | null;
+  brandId: string | null;
+  attributes: {
+    name: string;
+    sortOrder: number;
+    matrixSplitValues: string;
+  }[];
+  variants: {
+    sku: string;
+    barcode: string | null;
+    price: number;
+    costPrice: number;
+    stock: number;
+    lowStockAlert: number;
+    weight: number | null;
+    length: number | null;
+    width: number | null;
+    height: number | null;
+    isActive: boolean;
+    sortOrder: number;
+    options: {
+      attributeName: string;
+      value: string;
+    }[];
+  }[];
+}
+
+// 3. Build the Master Configuration Blueprint
+export const productExcelImportConfig: BulkImportConfig<typeof productExcelRowSchema, GroupedProductImportPayload[]> = {
+  entityName: 'Product',
+  entityNamePlural: 'Products',
+  schema: productExcelRowSchema,
+  apiEndpoint: createBulkProductsAction,
+
+  customTemplatePath: 'products',
+
+  /**
+   * Transforms flat uploaded rows into a grouped, relational, variant-nested array model.
+   * Eliminates duplicate parent overhead transactions safely before hitting your database layers!
+   */
+  transformData: (rows: ProductExcelRow[] | ProductExcelRow): GroupedProductImportPayload[] => {
+    // Standardize input into an array to ensure stable processing loops
+    const flatRows = Array.isArray(rows) ? rows : [rows];
+    const groupedMap = new Map<string, GroupedProductImportPayload>();
+
+    flatRows.forEach((row) => {
+      const key = row.baseSku.trim().toUpperCase();
+
+      // If the parent product object doesn't exist in our group tracking map yet, initialize it
+      if (!groupedMap.has(key)) {
+        groupedMap.set(key, {
+          name: row.name.trim(),
+          baseSku: key,
+          description: row.description || null,
+          hasVariant: false, // Will toggle to true if multi-attributes are found
+          isActive: true,
+          categoryId: (row.categoryId === "" || row.categoryId === "none" ||  row.categoryId === undefined || row.categoryId === "blank") ? null : row.categoryId,
+          brandId: (row.brandId === "" || row.brandId === "none" || row.brandId === undefined || row.brandId === "blank") ? null : row.brandId,
+          attributes: [],
+          variants: []
+        });
+      }
+
+      const parentProduct = groupedMap.get(key)!;
+
+      // Map inline structural variant option values
+      const variantOptions: { attributeName: string; value: string }[] = [];
+      if (row.color && row.color.trim() !== "") variantOptions.push({ attributeName: "Color", value: row.color.trim() });
+      if (row.size && row.size.trim() !== "") variantOptions.push({ attributeName: "Size", value: row.size.trim() });
+      if (row.material && row.material.trim() !== "") variantOptions.push({ attributeName: "Material", value: row.material.trim() });
+
+      // Update parent configuration metadata rules based on options found
+      if (variantOptions.length > 0) {
+        parentProduct.hasVariant = true;
+        variantOptions.forEach((opt) => {
+          if (!parentProduct.attributes.some(attr => attr.name === opt.attributeName)) {
+            parentProduct.attributes.push({
+              name: opt.attributeName,
+              sortOrder: parentProduct.attributes.length,
+              matrixSplitValues: ""
+            });
+          }
+        });
+      }
+
+      // Append clean variant entries straight into the parent data container object
+      parentProduct.variants.push({
+        sku: row.sku.trim(),
+        barcode: row.barcode || null,
+        price: row.price,
+        costPrice: row.costPrice,
+        stock: row.stock,
+        lowStockAlert: row.lowStockAlert,
+        weight: row.weight || null,
+        length: row.length || null,
+        width: row.width || null,
+        height: row.height || null,
+        isActive: true,
+        sortOrder: parentProduct.variants.length,
+        options: variantOptions
+      });
+    });
+
+    return Array.from(groupedMap.values());
+  },
+
+  validateRow: (row: ProductExcelRow): { valid: boolean; error?: string } => {
+    if (row.price < row.costPrice) {
+      return {
+        valid: false,
+        error: `SKU ${row.sku}: Price (${row.price}) cannot be lower than cost price (${row.costPrice}).`
+      };
+    }
+    if (!row.baseSku || row.baseSku.trim() === "") {
+      return {
+        valid: false,
+        error: `Product "${row.name}" requires a valid Base SKU prefix.`
+      };
+    }
+    return { valid: true };
+  }
+};
+
+
+
