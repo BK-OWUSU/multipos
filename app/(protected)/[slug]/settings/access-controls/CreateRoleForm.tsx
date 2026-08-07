@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { 
-  CalendarIcon, Badge, ChevronRight, 
-  ChevronLeft, ShieldCheck 
+  CalendarIcon, ChevronRight, 
+  ChevronLeft, 
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -131,7 +131,11 @@ export default function CreateRoleForm({ onSuccess }: { onSuccess?: () => void }
                     <PopoverContent className="w-auto p-0">
                       <Calendar 
                         mode="single" 
-                        selected={field.value || undefined} 
+                          selected={
+                            field.value 
+                              ? (typeof field.value === "string" ? new Date(field.value) : field.value) 
+                              : undefined
+                            }  
                         onSelect={field.onChange} 
                         disabled={(date) => date < new Date()}
                       />
@@ -177,7 +181,7 @@ export default function CreateRoleForm({ onSuccess }: { onSuccess?: () => void }
                   <div className="flex items-center justify-between w-full">
                     <AccordionTrigger className="hover:no-underline">
                       <div className="flex items-center gap-2">
-                        <module.icon className="h-4 w-4 text-slate-500" />
+                        {/* <module.icon className="h-4 w-4 text-slate-500" /> */}
                         <span className="font-semibold">{module.title}</span>
                       </div>
                     </AccordionTrigger>

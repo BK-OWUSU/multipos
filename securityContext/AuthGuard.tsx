@@ -2,12 +2,11 @@
 
 import React, { useEffect, useRef } from "react";
 import { useRouter, usePathname, useParams } from "next/navigation";
-import { Pill } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { toast } from "sonner";
 import { SessionInfo } from "@/components/formatSessionDate";
 import { useNotificationStore } from "@/store/notification.store";
-import { FaCashRegister } from "react-icons/fa";
+import AppLoader from "@/components/loaders/app-loader";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -116,17 +115,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   // 6. LOADING & SYNCING GUARD: Prevent content flash while fetching auth status
   if (loading || !user) {
     return (
-      <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-3">
-          <div className="relative flex items-center justify-center">
-            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-800"></div>
-            <FaCashRegister className="h-4 w-4 text-blue-800 absolute animate-pulse" />
-          </div>
-          <p className="animate-pulse text-sm font-semibold text-slate-500 tracking-wider">
-            Syncing your workspace...
-          </p>
-        </div>
-      </div>
+     <AppLoader/>
     );
   }
 

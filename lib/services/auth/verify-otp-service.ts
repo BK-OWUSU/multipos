@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/dbHelper"
 import { verifyOTP } from "@/lib/otp"
-import { clearEmailVerificationSessionCookie, generatePOSToken, POS_COOKIE_NAME, setEmailVerificationSessionCookie, setPOSAppSessionCookie, VERIFY_COOKIE_NAME, verifyEmailVerificationToken } from "@/lib/auths-functions"
+import { clearEmailVerificationSessionCookie, setEmailVerificationSessionCookie, setPOSAppSessionCookie, VERIFY_COOKIE_NAME, verifyEmailVerificationToken } from "@/lib/auths-functions"
 import { NextRequest, NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { JwtPayload } from "@/types/auth/auth"
@@ -93,6 +93,7 @@ export class VerifyOTPService {
         businessId: emp.businessId,
         businessSlug: emp.business.slug,
         roleName: emp.role.name,
+        roleId: emp.role.id,
         firstName: emp.firstName,
         lastName: emp.lastName,
         email: emp.email,

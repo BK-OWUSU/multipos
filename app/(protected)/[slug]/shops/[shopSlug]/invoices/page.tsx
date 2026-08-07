@@ -5,7 +5,7 @@ import { FileText, Clock, CheckCircle2, DollarSign, Plus, Search, Filter } from 
 import { useInvoiceStore } from "@/store/invoiceStore";
 
 // Shadcn UI Component Imports from your attached project tree
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -140,7 +140,7 @@ export default function InvoicesDashboardPage() {
             <div className="flex flex-col gap-1.5 md:w-44">
               <Select
                 value={filters.status || "all-statuses"}
-                onValueChange={(val) => updateFiltersLocal({ status: val === "all-statuses" ? "" : val as any })}
+                onValueChange={(val) => updateFiltersLocal({ status: val === "all-statuses" ? "" : val as unknown as "COMPLETED" | "PENDING" | "CANCELLED" | "REFUNDED" })}
               >
                 <SelectTrigger className="bg-white border-gray-200 text-sm">
                   <SelectValue placeholder="Status" />

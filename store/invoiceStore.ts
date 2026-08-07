@@ -15,6 +15,7 @@ export interface InvoiceSummaryRow {
   paymentType: PaymentType;
   totalAmount: number;
   byEmployee: string;
+  status?: "COMPLETED" | "PENDING" | "CANCELLED" | "REFUNDED" | ""
   toCustomer: string;       // Fallback to "Walk-in Customer" if null
   date: string;             // YYYY-MM-DD format
   time: string;             // HH:MM AM/PM format

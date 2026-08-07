@@ -1010,12 +1010,12 @@ static async getSaleById(saleId: string, businessId: string) {
       include: {
         items: {
           include: {
-            variant: { select: { id: true, name: true, sku: true } }
+            variant: { select: { id: true, product: {select: {name:true} }, sku: true } }
           }
         },
         payments: true,
         customer: true,
-        employee: { select: { name: true, email: true } },
+        employee: { select: { firstName:true, lastName:true, email: true } },
         shop: { select: { name: true, address: true, phone: true } },
         invoice: true
       }

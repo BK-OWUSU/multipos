@@ -51,7 +51,7 @@ const mockHistoricalTransfers = [
 const transferTableData: TransferRecord[] = [
   {
     id: "tx-007",
-    referenceNo: "TRF-2026-0518-007",
+    customId: "TRF-2026-0518-007",
     fromShop: "East Legon Branch",
     toShop: "Tema Branch",
     itemsCount: 5,
@@ -63,7 +63,7 @@ const transferTableData: TransferRecord[] = [
   },
   {
     id: "tx-006",
-    referenceNo: "TRF-2026-0518-006",
+    customId: "TRF-2026-0518-006",
     fromShop: "Madina Branch",
     toShop: "Osu Branch",
     itemsCount: 3,
@@ -75,7 +75,7 @@ const transferTableData: TransferRecord[] = [
   },
   {
     id: "tx-005",
-    referenceNo: "TRF-2026-0518-005",
+    customId: "TRF-2026-0518-005",
     fromShop: "Airport Branch",
     toShop: "East Legon Branch",
     itemsCount: 6,
@@ -87,7 +87,7 @@ const transferTableData: TransferRecord[] = [
   },
   {
     id: "tx-004",
-    referenceNo: "TRF-2026-0517-004",
+    customId: "TRF-2026-0517-004",
     fromShop: "Tema Branch",
     toShop: "Madina Branch",
     itemsCount: 2,
@@ -99,7 +99,7 @@ const transferTableData: TransferRecord[] = [
   },
   {
     id: "tx-003",
-    referenceNo: "TRF-2026-0517-003",
+    customId: "TRF-2026-0517-003",
     fromShop: "Osu Branch",
     toShop: "Airport Branch",
     itemsCount: 3,
@@ -111,7 +111,7 @@ const transferTableData: TransferRecord[] = [
   },
   {
     id: "tx-002",
-    referenceNo: "TRF-2026-0517-002",
+    customId: "TRF-2026-0517-002",
     fromShop: "East Legon Branch",
     toShop: "Madina Branch",
     itemsCount: 4,
@@ -123,7 +123,7 @@ const transferTableData: TransferRecord[] = [
   },
   {
     id: "tx-001",
-    referenceNo: "TRF-2026-0516-001",
+    customId: "TRF-2026-0516-001",
     fromShop: "Airport Branch",
     toShop: "Osu Branch",
     itemsCount: 2,
@@ -430,7 +430,7 @@ export default function StockTransferTerminal() {
             <TableMain
               columns={transfersColumnDef}
               data={transferTableData}
-              searchKey="referenceNo"
+              searchKey="customId"
               placeholder="Search by reference number..."
               columnVisibilityFilter={true}
             />

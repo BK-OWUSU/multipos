@@ -52,27 +52,6 @@ export default function BusinessProfilePage() {
       timezone: "Africa/Accra",
       workStartTime: "08:00",
       workCloseTime: "18:00",
-      // Default initial states matching tab configurations
-      branding: {
-        primaryColor: "#2563eb",
-        secondaryColor: "#4f46e5",
-        receiptHeader: "",
-      },
-      preferences: {
-        taxConfig: "NO_TAX",
-        defaultSegment: "WALK_IN",
-        lowStockThreshold: 10,
-        multiStoreInventory: false,
-      },
-      integrations: {
-        paystack: true,
-        stripe: false,
-        quickbooks: false,
-        hardwareTerminal: true,
-      },
-      billing: {
-        isAnnualSharing: false,
-      }
     },
   });
 

@@ -1,4 +1,5 @@
 import { getSession } from "@/lib/auths-functions";
+import { getRequestMeta } from "@/lib/getRequestMeta";
 import { CustomerService } from "@/lib/services/business/customer-service";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -47,9 +48,11 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
         if (!session || typeof session === "string"){
             return NextResponse.json({ error: "Unauthorized", success: false }, { status: 401 });
         } 
-        const { userId, businessId } = session;
+        
+        const { ipAddress } = await getRequestMeta();
+        const { userId, businessId, businessSlug } = session;
 
-        const response = await CustomerService.softDeleteCustomer(id,userId,businessId, session.businessSlug);
+        const response = await CustomerService.softDeleteCustomer(id,userId,businessId, businessSlug, ipAddress);
 
         if (response.success && response.message) {
             return NextResponse.json({ success: true, message: response.message },{ status: response.status });
