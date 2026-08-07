@@ -89,7 +89,7 @@ export function Navbar({ currentSlug, isLoggedIn }: LandingPageProps) {
           <div className="w-10 h-10 rounded-xl bg-linear-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-bold shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
             <Zap className="w-5 h-5" />
           </div>
-          <span className="font-bold text-xl tracking-tight text-slate-900">
+          <span className="font-bold text-xl tracking-tight text-slate-600">
             Multi<span className="text-blue-600">POS</span>
           </span>
         </Link>
