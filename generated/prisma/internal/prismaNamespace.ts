@@ -3450,6 +3450,7 @@ export const BusinessScalarFieldEnum = {
   phone: 'phone',
   address: 'address',
   logoUrl: 'logoUrl',
+  fileKey: 'fileKey',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   isEmailVerified: 'isEmailVerified',

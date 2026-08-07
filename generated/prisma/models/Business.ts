@@ -42,6 +42,7 @@ export type BusinessMinAggregateOutputType = {
   phone: string | null
   address: string | null
   logoUrl: string | null
+  fileKey: string | null
   createdAt: Date | null
   updatedAt: Date | null
   isEmailVerified: boolean | null
@@ -65,6 +66,7 @@ export type BusinessMaxAggregateOutputType = {
   phone: string | null
   address: string | null
   logoUrl: string | null
+  fileKey: string | null
   createdAt: Date | null
   updatedAt: Date | null
   isEmailVerified: boolean | null
@@ -88,6 +90,7 @@ export type BusinessCountAggregateOutputType = {
   phone: number
   address: number
   logoUrl: number
+  fileKey: number
   createdAt: number
   updatedAt: number
   isEmailVerified: number
@@ -121,6 +124,7 @@ export type BusinessMinAggregateInputType = {
   phone?: true
   address?: true
   logoUrl?: true
+  fileKey?: true
   createdAt?: true
   updatedAt?: true
   isEmailVerified?: true
@@ -144,6 +148,7 @@ export type BusinessMaxAggregateInputType = {
   phone?: true
   address?: true
   logoUrl?: true
+  fileKey?: true
   createdAt?: true
   updatedAt?: true
   isEmailVerified?: true
@@ -167,6 +172,7 @@ export type BusinessCountAggregateInputType = {
   phone?: true
   address?: true
   logoUrl?: true
+  fileKey?: true
   createdAt?: true
   updatedAt?: true
   isEmailVerified?: true
@@ -277,6 +283,7 @@ export type BusinessGroupByOutputType = {
   phone: string | null
   address: string | null
   logoUrl: string | null
+  fileKey: string | null
   createdAt: Date
   updatedAt: Date
   isEmailVerified: boolean
@@ -323,6 +330,7 @@ export type BusinessWhereInput = {
   phone?: Prisma.StringNullableFilter<"Business"> | string | null
   address?: Prisma.StringNullableFilter<"Business"> | string | null
   logoUrl?: Prisma.StringNullableFilter<"Business"> | string | null
+  fileKey?: Prisma.StringNullableFilter<"Business"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Business"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Business"> | Date | string
   isEmailVerified?: Prisma.BoolFilter<"Business"> | boolean
@@ -372,6 +380,7 @@ export type BusinessOrderByWithRelationInput = {
   phone?: Prisma.SortOrderInput | Prisma.SortOrder
   address?: Prisma.SortOrderInput | Prisma.SortOrder
   logoUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  fileKey?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   isEmailVerified?: Prisma.SortOrder
@@ -424,6 +433,7 @@ export type BusinessWhereUniqueInput = Prisma.AtLeast<{
   phone?: Prisma.StringNullableFilter<"Business"> | string | null
   address?: Prisma.StringNullableFilter<"Business"> | string | null
   logoUrl?: Prisma.StringNullableFilter<"Business"> | string | null
+  fileKey?: Prisma.StringNullableFilter<"Business"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Business"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Business"> | Date | string
   isEmailVerified?: Prisma.BoolFilter<"Business"> | boolean
@@ -473,6 +483,7 @@ export type BusinessOrderByWithAggregationInput = {
   phone?: Prisma.SortOrderInput | Prisma.SortOrder
   address?: Prisma.SortOrderInput | Prisma.SortOrder
   logoUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  fileKey?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   isEmailVerified?: Prisma.SortOrder
@@ -504,6 +515,7 @@ export type BusinessScalarWhereWithAggregatesInput = {
   phone?: Prisma.StringNullableWithAggregatesFilter<"Business"> | string | null
   address?: Prisma.StringNullableWithAggregatesFilter<"Business"> | string | null
   logoUrl?: Prisma.StringNullableWithAggregatesFilter<"Business"> | string | null
+  fileKey?: Prisma.StringNullableWithAggregatesFilter<"Business"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Business"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Business"> | Date | string
   isEmailVerified?: Prisma.BoolWithAggregatesFilter<"Business"> | boolean
@@ -527,6 +539,7 @@ export type BusinessCreateInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -576,6 +589,7 @@ export type BusinessUncheckedCreateInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -625,6 +639,7 @@ export type BusinessUpdateInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -674,6 +689,7 @@ export type BusinessUncheckedUpdateInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -723,6 +739,7 @@ export type BusinessCreateManyInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -746,6 +763,7 @@ export type BusinessUpdateManyMutationInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -769,6 +787,7 @@ export type BusinessUncheckedUpdateManyInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -792,6 +811,7 @@ export type BusinessCountOrderByAggregateInput = {
   phone?: Prisma.SortOrder
   address?: Prisma.SortOrder
   logoUrl?: Prisma.SortOrder
+  fileKey?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   isEmailVerified?: Prisma.SortOrder
@@ -819,6 +839,7 @@ export type BusinessMaxOrderByAggregateInput = {
   phone?: Prisma.SortOrder
   address?: Prisma.SortOrder
   logoUrl?: Prisma.SortOrder
+  fileKey?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   isEmailVerified?: Prisma.SortOrder
@@ -842,6 +863,7 @@ export type BusinessMinOrderByAggregateInput = {
   phone?: Prisma.SortOrder
   address?: Prisma.SortOrder
   logoUrl?: Prisma.SortOrder
+  fileKey?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   isEmailVerified?: Prisma.SortOrder
@@ -1266,6 +1288,7 @@ export type BusinessCreateWithoutEmployeeInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -1314,6 +1337,7 @@ export type BusinessUncheckedCreateWithoutEmployeeInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -1378,6 +1402,7 @@ export type BusinessUpdateWithoutEmployeeInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1426,6 +1451,7 @@ export type BusinessUncheckedUpdateWithoutEmployeeInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1474,6 +1500,7 @@ export type BusinessCreateWithoutUserSessionLogsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -1522,6 +1549,7 @@ export type BusinessUncheckedCreateWithoutUserSessionLogsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -1586,6 +1614,7 @@ export type BusinessUpdateWithoutUserSessionLogsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1634,6 +1663,7 @@ export type BusinessUncheckedUpdateWithoutUserSessionLogsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1682,6 +1712,7 @@ export type BusinessCreateWithoutRolesInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -1730,6 +1761,7 @@ export type BusinessUncheckedCreateWithoutRolesInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -1794,6 +1826,7 @@ export type BusinessUpdateWithoutRolesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1842,6 +1875,7 @@ export type BusinessUncheckedUpdateWithoutRolesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1890,6 +1924,7 @@ export type BusinessCreateWithoutTimeCardsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -1938,6 +1973,7 @@ export type BusinessUncheckedCreateWithoutTimeCardsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -2002,6 +2038,7 @@ export type BusinessUpdateWithoutTimeCardsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2050,6 +2087,7 @@ export type BusinessUncheckedUpdateWithoutTimeCardsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2098,6 +2136,7 @@ export type BusinessCreateWithoutCategoriesInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -2146,6 +2185,7 @@ export type BusinessUncheckedCreateWithoutCategoriesInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -2210,6 +2250,7 @@ export type BusinessUpdateWithoutCategoriesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2258,6 +2299,7 @@ export type BusinessUncheckedUpdateWithoutCategoriesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2306,6 +2348,7 @@ export type BusinessCreateWithoutBrandsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -2354,6 +2397,7 @@ export type BusinessUncheckedCreateWithoutBrandsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -2418,6 +2462,7 @@ export type BusinessUpdateWithoutBrandsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2466,6 +2511,7 @@ export type BusinessUncheckedUpdateWithoutBrandsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2514,6 +2560,7 @@ export type BusinessCreateWithoutProductsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -2562,6 +2609,7 @@ export type BusinessUncheckedCreateWithoutProductsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -2626,6 +2674,7 @@ export type BusinessUpdateWithoutProductsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2674,6 +2723,7 @@ export type BusinessUncheckedUpdateWithoutProductsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2722,6 +2772,7 @@ export type BusinessCreateWithoutProductAttributesInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -2770,6 +2821,7 @@ export type BusinessUncheckedCreateWithoutProductAttributesInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -2834,6 +2886,7 @@ export type BusinessUpdateWithoutProductAttributesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2882,6 +2935,7 @@ export type BusinessUncheckedUpdateWithoutProductAttributesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2930,6 +2984,7 @@ export type BusinessCreateWithoutShopsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -2978,6 +3033,7 @@ export type BusinessUncheckedCreateWithoutShopsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -3042,6 +3098,7 @@ export type BusinessUpdateWithoutShopsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3090,6 +3147,7 @@ export type BusinessUncheckedUpdateWithoutShopsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3138,6 +3196,7 @@ export type BusinessCreateWithoutShopInventoriesInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -3186,6 +3245,7 @@ export type BusinessUncheckedCreateWithoutShopInventoriesInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -3250,6 +3310,7 @@ export type BusinessUpdateWithoutShopInventoriesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3298,6 +3359,7 @@ export type BusinessUncheckedUpdateWithoutShopInventoriesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3346,6 +3408,7 @@ export type BusinessCreateWithoutDiscountsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -3394,6 +3457,7 @@ export type BusinessUncheckedCreateWithoutDiscountsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -3458,6 +3522,7 @@ export type BusinessUpdateWithoutDiscountsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3506,6 +3571,7 @@ export type BusinessUncheckedUpdateWithoutDiscountsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3554,6 +3620,7 @@ export type BusinessCreateWithoutCustomersInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -3602,6 +3669,7 @@ export type BusinessUncheckedCreateWithoutCustomersInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -3666,6 +3734,7 @@ export type BusinessUpdateWithoutCustomersInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3714,6 +3783,7 @@ export type BusinessUncheckedUpdateWithoutCustomersInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3762,6 +3832,7 @@ export type BusinessCreateWithoutLoyaltyTiersInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -3810,6 +3881,7 @@ export type BusinessUncheckedCreateWithoutLoyaltyTiersInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -3874,6 +3946,7 @@ export type BusinessUpdateWithoutLoyaltyTiersInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3922,6 +3995,7 @@ export type BusinessUncheckedUpdateWithoutLoyaltyTiersInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3970,6 +4044,7 @@ export type BusinessCreateWithoutLoyaltyWalletsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -4018,6 +4093,7 @@ export type BusinessUncheckedCreateWithoutLoyaltyWalletsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -4082,6 +4158,7 @@ export type BusinessUpdateWithoutLoyaltyWalletsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4130,6 +4207,7 @@ export type BusinessUncheckedUpdateWithoutLoyaltyWalletsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4178,6 +4256,7 @@ export type BusinessCreateWithoutLoyaltyConfigurationsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -4226,6 +4305,7 @@ export type BusinessUncheckedCreateWithoutLoyaltyConfigurationsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -4290,6 +4370,7 @@ export type BusinessUpdateWithoutLoyaltyConfigurationsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4338,6 +4419,7 @@ export type BusinessUncheckedUpdateWithoutLoyaltyConfigurationsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4386,6 +4468,7 @@ export type BusinessCreateWithoutLoyaltyRewardsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -4434,6 +4517,7 @@ export type BusinessUncheckedCreateWithoutLoyaltyRewardsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -4498,6 +4582,7 @@ export type BusinessUpdateWithoutLoyaltyRewardsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4546,6 +4631,7 @@ export type BusinessUncheckedUpdateWithoutLoyaltyRewardsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4594,6 +4680,7 @@ export type BusinessCreateWithoutLoyaltyHistoriesInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -4642,6 +4729,7 @@ export type BusinessUncheckedCreateWithoutLoyaltyHistoriesInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -4706,6 +4794,7 @@ export type BusinessUpdateWithoutLoyaltyHistoriesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4754,6 +4843,7 @@ export type BusinessUncheckedUpdateWithoutLoyaltyHistoriesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4802,6 +4892,7 @@ export type BusinessCreateWithoutSalesInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -4850,6 +4941,7 @@ export type BusinessUncheckedCreateWithoutSalesInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -4914,6 +5006,7 @@ export type BusinessUpdateWithoutSalesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4962,6 +5055,7 @@ export type BusinessUncheckedUpdateWithoutSalesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -5010,6 +5104,7 @@ export type BusinessCreateWithoutSaleItemsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -5058,6 +5153,7 @@ export type BusinessUncheckedCreateWithoutSaleItemsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -5122,6 +5218,7 @@ export type BusinessUpdateWithoutSaleItemsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -5170,6 +5267,7 @@ export type BusinessUncheckedUpdateWithoutSaleItemsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -5218,6 +5316,7 @@ export type BusinessCreateWithoutPaymentsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -5266,6 +5365,7 @@ export type BusinessUncheckedCreateWithoutPaymentsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -5330,6 +5430,7 @@ export type BusinessUpdateWithoutPaymentsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -5378,6 +5479,7 @@ export type BusinessUncheckedUpdateWithoutPaymentsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -5426,6 +5528,7 @@ export type BusinessCreateWithoutStockTransfersInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -5474,6 +5577,7 @@ export type BusinessUncheckedCreateWithoutStockTransfersInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -5538,6 +5642,7 @@ export type BusinessUpdateWithoutStockTransfersInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -5586,6 +5691,7 @@ export type BusinessUncheckedUpdateWithoutStockTransfersInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -5634,6 +5740,7 @@ export type BusinessCreateWithoutPurchaseOrdersInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -5682,6 +5789,7 @@ export type BusinessUncheckedCreateWithoutPurchaseOrdersInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -5746,6 +5854,7 @@ export type BusinessUpdateWithoutPurchaseOrdersInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -5794,6 +5903,7 @@ export type BusinessUncheckedUpdateWithoutPurchaseOrdersInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -5842,6 +5952,7 @@ export type BusinessCreateWithoutSuppliersInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -5890,6 +6001,7 @@ export type BusinessUncheckedCreateWithoutSuppliersInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -5954,6 +6066,7 @@ export type BusinessUpdateWithoutSuppliersInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -6002,6 +6115,7 @@ export type BusinessUncheckedUpdateWithoutSuppliersInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -6050,6 +6164,7 @@ export type BusinessCreateWithoutCashSessionsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -6098,6 +6213,7 @@ export type BusinessUncheckedCreateWithoutCashSessionsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -6162,6 +6278,7 @@ export type BusinessUpdateWithoutCashSessionsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -6210,6 +6327,7 @@ export type BusinessUncheckedUpdateWithoutCashSessionsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -6258,6 +6376,7 @@ export type BusinessCreateWithoutAuditLogsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -6306,6 +6425,7 @@ export type BusinessUncheckedCreateWithoutAuditLogsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -6370,6 +6490,7 @@ export type BusinessUpdateWithoutAuditLogsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -6418,6 +6539,7 @@ export type BusinessUncheckedUpdateWithoutAuditLogsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -6466,6 +6588,7 @@ export type BusinessCreateWithoutNotificationsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -6514,6 +6637,7 @@ export type BusinessUncheckedCreateWithoutNotificationsInput = {
   phone?: string | null
   address?: string | null
   logoUrl?: string | null
+  fileKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   isEmailVerified?: boolean
@@ -6578,6 +6702,7 @@ export type BusinessUpdateWithoutNotificationsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -6626,6 +6751,7 @@ export type BusinessUncheckedUpdateWithoutNotificationsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -6930,6 +7056,7 @@ export type BusinessSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   phone?: boolean
   address?: boolean
   logoUrl?: boolean
+  fileKey?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   isEmailVerified?: boolean
@@ -6980,6 +7107,7 @@ export type BusinessSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   phone?: boolean
   address?: boolean
   logoUrl?: boolean
+  fileKey?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   isEmailVerified?: boolean
@@ -7003,6 +7131,7 @@ export type BusinessSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   phone?: boolean
   address?: boolean
   logoUrl?: boolean
+  fileKey?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   isEmailVerified?: boolean
@@ -7026,6 +7155,7 @@ export type BusinessSelectScalar = {
   phone?: boolean
   address?: boolean
   logoUrl?: boolean
+  fileKey?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   isEmailVerified?: boolean
@@ -7041,7 +7171,7 @@ export type BusinessSelectScalar = {
   dateFormat?: boolean
 }
 
-export type BusinessOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "slug" | "email" | "phone" | "address" | "logoUrl" | "createdAt" | "updatedAt" | "isEmailVerified" | "onboardingStep" | "isOnboarded" | "workHrsStartTime" | "workHrsCloseTime" | "termsAgreement" | "countryCode" | "currencyCode" | "currencySymbol" | "locale" | "dateFormat", ExtArgs["result"]["business"]>
+export type BusinessOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "slug" | "email" | "phone" | "address" | "logoUrl" | "fileKey" | "createdAt" | "updatedAt" | "isEmailVerified" | "onboardingStep" | "isOnboarded" | "workHrsStartTime" | "workHrsCloseTime" | "termsAgreement" | "countryCode" | "currencyCode" | "currencySymbol" | "locale" | "dateFormat", ExtArgs["result"]["business"]>
 export type BusinessInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   employee?: boolean | Prisma.Business$employeeArgs<ExtArgs>
   shops?: boolean | Prisma.Business$shopsArgs<ExtArgs>
@@ -7112,6 +7242,7 @@ export type $BusinessPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     phone: string | null
     address: string | null
     logoUrl: string | null
+    fileKey: string | null
     createdAt: Date
     updatedAt: Date
     isEmailVerified: boolean
@@ -7581,6 +7712,7 @@ export interface BusinessFieldRefs {
   readonly phone: Prisma.FieldRef<"Business", 'String'>
   readonly address: Prisma.FieldRef<"Business", 'String'>
   readonly logoUrl: Prisma.FieldRef<"Business", 'String'>
+  readonly fileKey: Prisma.FieldRef<"Business", 'String'>
   readonly createdAt: Prisma.FieldRef<"Business", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Business", 'DateTime'>
   readonly isEmailVerified: Prisma.FieldRef<"Business", 'Boolean'>

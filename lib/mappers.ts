@@ -34,6 +34,7 @@ export function mapUserToResponse(user: UserWithRelations): User {
       currencySymbol: emp.business.currencySymbol,
       locale: emp.business.locale,
       countryCode: emp.business.countryCode || undefined,
+      logoUrl: emp.business.logoUrl || null,
     },
   
     currentShop: activeShopContext 

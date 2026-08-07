@@ -33,7 +33,7 @@ export class ResetPasswordService {
           employee: { businessId: businessId } 
         },
         include: {
-          employee: true
+          employee: {include: { business: true, role: true }},
         }
       });
 
@@ -56,6 +56,14 @@ export class ResetPasswordService {
           needsPasswordChange: false,
         }
       });
+
+      if (user.employee.role.name==="OWNER" && user.employee.business.isEmailVerified) {
+          // Update the business profile to mark email as verified
+          await tx.business.update({
+            where: { id: user.employee.businessId },
+            data: { onboardingStep: 2, isOnboarded: true }
+          });
+      }
 
       // 3. Audit Log - using user.employee.businessId
       await tx.auditLog.create({

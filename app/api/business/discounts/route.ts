@@ -11,8 +11,6 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await request.json().catch(() => ({}));
-    console.log(data)
-   
     const { userId, businessId } = session;
      
      const response = await DiscountService.createDiscount(data, businessId, userId)

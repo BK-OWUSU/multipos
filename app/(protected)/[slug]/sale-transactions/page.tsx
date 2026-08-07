@@ -174,7 +174,7 @@ const handleExport = (type: "excel" | "pdf") => {
         <div className="flex items-center gap-3">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="gap-2 bg-white">
+            <Button variant="outline" className="gap-2 bg-white" disabled={isExporting}>
               <Download className="h-4 w-4 text-slate-500" />
               <span>Export Report</span>
               <ChevronDown className="h-4 w-4 text-slate-400 opacity-70" />

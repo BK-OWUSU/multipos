@@ -5,6 +5,8 @@ export const businessProfileSchema = z.object({
   name: z.string().min(2, "Business name must be at least 2 characters"),
   businessSlug: z.string().min(2, "Slug is required"),
   email: z.string().email("Invalid email address"),
+  logoUrl: z.string().optional().nullable(),
+  fileKey: z.string().optional().nullable(), 
   phone: z.string().min(9, "Valid contact number is required"),
   address: z.string().min(5, "Full physical address is required"),
   country: z.string().min(2, "Country selection is required"),

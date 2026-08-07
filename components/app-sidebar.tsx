@@ -48,7 +48,7 @@ export function AppSidebar({ slug, shopSlug, ...props }: AppSidebarProps) {
   const teamsData = [
     {
       name: businessName || "MultiPOS",
-      logo: GalleryVerticalEnd, // You can make this dynamic later
+      logo: user?.business.logoUrl || "/imgs/default-logo.png" || GalleryVerticalEnd,
       plan: user?.role?.name || "Member",
     },
   ];

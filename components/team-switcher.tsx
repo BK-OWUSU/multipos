@@ -16,7 +16,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { Store , ChevronsUpDownIcon, PlusIcon, type LucideIcon } from "lucide-react"
+import Image from "next/image";
+import { ChevronsUpDownIcon, PlusIcon, type LucideIcon } from "lucide-react"
 import { toast } from "sonner"
 
 export function TeamSwitcher({
@@ -25,7 +26,7 @@ export function TeamSwitcher({
   teams: {
     name: string
     // Change React.ReactNode to LucideIcon
-    logo: LucideIcon 
+    logo: string | LucideIcon 
     plan: string
   }[]
 }) {
@@ -48,7 +49,15 @@ export function TeamSwitcher({
             >
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-blue-600 text-white">
                 {/* Render it as a component */}
-                <ActiveLogo className="size-4" />
+                {typeof ActiveLogo === "string" ? (
+                 <Image
+                    src={ActiveLogo as string} 
+                    alt="Business Logo" 
+                    className="w-full h-full object-cover"
+                    width={50}
+                    height={50}
+                  />
+                ) : (<ActiveLogo className="size-4" />)}
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">{activeTeam.name}</span>

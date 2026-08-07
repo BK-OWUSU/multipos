@@ -52,6 +52,7 @@ export type User = {
     currencySymbol: string;
     locale: string;
     countryCode?: string;
+    logoUrl?: string | null;
   };
   //Shop Details
   currentShop?: {

@@ -56,11 +56,35 @@ export class VerifyOTPService {
       return NextResponse.json({ error: result.message, success: false }, { status: 400 })
     }
 
-    // 4. Mark as verified in DB
-    await prisma.user.update({
-      where: { id: userId },
-      data: { isVerified: true }
-    })
+
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: userId },
+        data: { isVerified: true }
+      });
+
+      if (emp.role.name === "OWNER" && !emp.business.isEmailVerified) {
+          // Update the business profile to mark email as verified
+          await tx.business.update({
+            where: { id: emp.businessId },
+            data: { isEmailVerified: true }
+          });
+
+          // Create an audit log entry for the email verification
+          await tx.auditLog.create({
+            data: {
+              action: "EMAIL_VERIFICATION",
+              entity: "USER",
+              entityId: userId,
+              userId: userId,
+              businessId: emp.businessId,
+              newValue: "User email verified",
+              oldValue: "***SENSITIVE***",
+              details: `User, ${emp.firstName} ${emp.lastName}, completed email verification.`
+            }
+          });
+      }
+    });
 
     // 5. Handle initial password change requirement
     if (user.needsPasswordChange) {
