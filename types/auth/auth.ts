@@ -31,6 +31,9 @@ export type User = {
   email: string;
   imageUrl?:  string | null;
   fileKey?:   string | null;
+  needsPasswordChange: boolean;
+  isActive: boolean;
+  isVerified: boolean;
 
   // Employment Details
   designation?: string | null;

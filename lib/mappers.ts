@@ -19,6 +19,9 @@ export function mapUserToResponse(user: UserWithRelations): User {
     email: emp.email,
     imageUrl: emp.imageUrl || null,
     fileKey: emp.fileKey || null,
+    needsPasswordChange: user.needsPasswordChange,
+    isActive: user.isActive,
+    isVerified: user.isVerified,  
 
     role: {
       name: emp.role?.name,

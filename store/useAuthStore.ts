@@ -118,6 +118,7 @@ export const useAuthStore = create<AuthStore>((set, get)=>({
             set({user: null, isLoggedIn: false, currentSlug: null, shopSlug: null})
             if (response.data?.success) {
                 toast.success("Logged out successfully!");
+                window.location.href = "/login"; // Redirect to login page after logout
             }
         } catch (error) {
             console.log("Error during logout: ", error);

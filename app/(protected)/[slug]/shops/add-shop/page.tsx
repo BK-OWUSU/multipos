@@ -90,7 +90,7 @@ export default function AddNewShopPage() {
           <p className="text-sm text-slate-500 mt-1">Shops &gt; Add New Shop</p>
         </div>
         <Button variant="outline" asChild className="text-blue-900 border-slate-200 self-start sm:self-auto bg-white hover:bg-slate-50">
-          <Link href={`/${businessSlug}/shops`}>
+          <Link href={`/${businessSlug}/shops/view-shops`}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Shops
           </Link>
@@ -274,7 +274,7 @@ export default function AddNewShopPage() {
               <Button 
                 type="button" 
                 variant="outline" 
-                onClick={() => router.push(`/${businessSlug}/shops`)}
+                onClick={() => router.push(`/${businessSlug}/shops/view-shops`)}
                 className="px-5 border-slate-200 text-slate-600 bg-white hover:bg-slate-50"
               >
                 Cancel
