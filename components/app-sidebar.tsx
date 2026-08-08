@@ -50,6 +50,7 @@ export function AppSidebar({ slug, shopSlug, ...props }: AppSidebarProps) {
       name: businessName || "MultiPOS",
       logo: user?.business.logoUrl || "/imgs/default-logo.png" || GalleryVerticalEnd,
       plan: user?.role?.name || "Member",
+      businessSlug: user?.business.slug || ""
     },
   ];
 

@@ -18,22 +18,24 @@ import {
 } from "@/components/ui/sidebar"
 import Image from "next/image";
 import { ChevronsUpDownIcon, PlusIcon, type LucideIcon } from "lucide-react"
-import { toast } from "sonner"
+import { useRouter } from "next/navigation";
 
 export function TeamSwitcher({
   teams,
 }: {
   teams: {
-    name: string
-    // Change React.ReactNode to LucideIcon
-    logo: string | LucideIcon 
-    plan: string
+    name: string;
+    logo: string | LucideIcon ;
+    plan: string;
+    businessSlug: string;
   }[]
 }) {
   const { isMobile } = useSidebar()
   const [activeTeam, setActiveTeam] = React.useState(teams[0])
-
+  const router = useRouter();
+  
   if (!activeTeam) return null
+  const linkPath = `/${activeTeam.businessSlug}/shops/add-shop`
 
   // Create a local variable for the active icon component
   const ActiveLogo = activeTeam.logo
@@ -84,8 +86,17 @@ export function TeamSwitcher({
                   className="gap-2 p-2"
                 >
                   <div className="flex size-6 items-center justify-center rounded-sm border">
-                    <TeamLogo className="size-4 shrink-0" />
-                  </div>
+                   
+                {typeof TeamLogo === "string" ? (
+                  <Image
+                  src={TeamLogo as string} 
+                  alt="Business Logo" 
+                  className="w-full h-full object-cover"
+                  width={16}
+                  height={16}
+                  />
+                ) : (<ActiveLogo className="size-4" />)}
+                </div>
                   {team.name}
                   <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
                 </DropdownMenuItem>
@@ -94,8 +105,7 @@ export function TeamSwitcher({
             <DropdownMenuSeparator />
             <DropdownMenuItem className="gap-2 p-2"
               onClick={() => {
-                // Handle "Add Store" action here
-                toast.success("Add store feature coming soon!");
+                router.push(linkPath)
               }}
             >
               <div className="flex size-6 items-center justify-center rounded-md border bg-background">

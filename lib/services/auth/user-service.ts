@@ -14,7 +14,9 @@ export class UserService {
     businessId: string,
     ipAddress?: string,
   ): Promise<AppResponse> {
+
     const result = passwordChangeSchema.safeParse(data);
+    
     if (!result.success) {
       return { success: false, error: "Invalid form data." };
     }
@@ -63,13 +65,13 @@ export class UserService {
  // 3. Audit Log - using user.employee.businessId
       await tx.auditLog.create({
         data: {
-          action: "PASSWORD_UPDATE",
+          action: "UPDATE",
           entity: "USER",
           entityId: userId,
           userId: userId,
           ipAddress: ipAddress,
           businessId: businessId,
-          newValue: "User completed complete password reset",
+          newValue: "User completed password reset",
           oldValue: "***SENSITIVE***",
           details: `User, ${user.employee.firstName} ${user.employee.lastName} changed password successfully.`
         }

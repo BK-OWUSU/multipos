@@ -124,7 +124,7 @@ export default function BusinessDashboard() {
   const { shops, fetchShops } = useShopStore();
   const { metrics, overview, categorySales, topProducts, recentTransactions, lowStockInventory, isLoading, fetchDashboardData } = useDashboardStore();
   const router = useRouter();
-
+  
   // 1. All State Hooks
   const [selectedPreset, setSelectedPreset] = useState<"" | "daily" | "current_week" | "current_month" | "last_month">("daily");
   const [selectedShop, setSelectedShop] = useState<string>("all");

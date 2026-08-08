@@ -3,14 +3,10 @@
 import * as React from "react";
 import { 
   KeyRound, 
-  ShieldAlert, 
   Mail, 
-  Phone, 
   Calendar, 
   Clock, 
-  Building2, 
   MapPin, 
-  Globe, 
   Edit3, 
   ShieldCheck, 
   LogOut,
