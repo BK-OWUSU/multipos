@@ -13,7 +13,6 @@ import {
   Store, 
   AlertTriangle,
   ChevronDown,
-  Loader2,
   Calendar
 } from "lucide-react";
 import hasAccess from "@/lib/accessPermissionSecurity";
@@ -53,6 +52,7 @@ import { useProductStore } from "@/store/productsStore";
 import { useShopStore } from "@/store/shopStore";
 import { useDashboardStore } from "@/store/analytics-dashbaords/business-dashboardStore";
 import CurrencyFormatter from "@/components/reusables/CurrencyFormter";
+import AppLoader from "@/components/loaders/app-loader";
 
 // ============================================================================
 // BRAND COLOR PALETTE CONFIGURATION
@@ -208,9 +208,7 @@ export default function BusinessDashboard() {
       
       {/* Loading Overlay */}
       {isLoading && (
-        <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-50 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
-        </div>
+        <AppLoader/>
       )}
 
       {/* 👤 APP PANEL HEADER BAR */}
