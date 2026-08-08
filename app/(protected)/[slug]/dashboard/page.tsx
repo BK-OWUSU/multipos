@@ -554,7 +554,7 @@ function BottomLinks () {
       return [
         { label: "Total Customers", value: totalCustomers, linkIcon: ArrowUpRight, color: "text-blue-600", icon: <Users className="w-5 h-5" />, linkPath: `/${slug}/customers/customer-base` },
         { label: "Total Products", value: totalProducts, linkIcon: ArrowUpRight, color: "text-emerald-600", icon: <Package className="w-5 h-5" />,linkPath: `/${slug}/products/product-list`},
-        { label: "Total Outlets", value: totalShops, linkIcon: ArrowUpRight, color: "text-sky-600", icon: <Store className="w-5 h-5" /> , linkPath: `/${slug}/shops`}
+        { label: "Total Outlets", value: totalShops, linkIcon: ArrowUpRight, color: "text-sky-600", icon: <Store className="w-5 h-5" /> , linkPath: `/${slug}/shops/view-shops`}
       ];
     }, [currentSlug, customers, products, router, shops, slug, user?.business.slug]);
     

@@ -82,9 +82,14 @@ export default function LocationMap({ latitude, longitude, onChange, readOnly = 
         scrollWheelZoom={false}
         className="w-full h-full"
       >
-        <TileLayer
+        {/* <TileLayer
           attribution='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>'
           url="https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png"
+        /> */}
+          {/* Replaced Stadia Maps with CartoDB Positron - No API Key Needed! */}
+        <TileLayer
+          attribution='&copy; <a href="https://openstreetmap.org" target="_blank">OpenStreetMap</a> contributors &copy; <a href="https://carto.com" target="_blank">CARTO</a>'
+          url="https://{s}://{z}/{x}/{y}{r}.png"
         />
         <Marker
           draggable={!readOnly} // Locks or unlocks pin dragging based on readOnly status
