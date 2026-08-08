@@ -1,7 +1,6 @@
 "use client" 
 
 import { useAuthStore } from '@/store/useAuthStore';
-import React from 'react'
 import UserProfile from './UserProfilePage';
 
 export default function ProfilePage() {

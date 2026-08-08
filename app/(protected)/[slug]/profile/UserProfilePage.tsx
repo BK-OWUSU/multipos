@@ -146,9 +146,6 @@ export default function UserProfile({ user, onEditProfile, onPasswordChange, onL
                 isMandatory={user.needsPasswordChange}
                 onSuccess={() => {
                     setIsPasswordModalOpen(false);
-                    if (onLogout) {
-                        onLogout();
-                    }
                 }}
             />
           </div>
