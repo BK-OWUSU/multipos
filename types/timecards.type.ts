@@ -10,6 +10,12 @@ export interface TimeCardEmployee {
   imageUrl?: string | null;
 }
 
+export interface TimeCardShop {
+  id: string;
+  name: string;
+  shopSlug: string;
+}
+
 export interface TimeCard {
   id: string;
   customId: string;
@@ -25,6 +31,7 @@ export interface TimeCard {
   createdAt: Date;
   updatedAt: Date;
   employee?: TimeCardEmployee;
+  shop?: TimeCardShop | null; // 🟢 Added to fix the TypeScript error
 }
 
 export interface ClockInDTO {
@@ -51,4 +58,33 @@ export interface TimeCardQueryFilters {
   startDate?: string;
   endDate?: string;
   period?: string;
+}
+
+
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface TimeCardMetricsMeta {
+  totalHoursSum: Decimal | number;
+  activeEmployees: number;
+  avgHoursPerEmployee: Decimal | number | string;
+  totalShops: number;
+  thisMonthHours: Decimal | number;
+}
+
+export interface TimeCardListMeta {
+  pagination: PaginationMeta;
+  metrics: TimeCardMetricsMeta;
+}
+
+/**
+ * Type representing the return data structure of your totalHoursWorked method
+ */
+export interface TotalHoursWorkedResponseData {
+  timeCards: TimeCard[];
+  meta: TimeCardListMeta;
 }

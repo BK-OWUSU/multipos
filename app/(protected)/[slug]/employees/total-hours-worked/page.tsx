@@ -1,135 +1,63 @@
 "use client";
 
-import * as React from "react";
 import { 
   Clock, 
   Users, 
   CalendarDays, 
   Store, 
   TrendingUp, 
-  Download, 
-  Plus, 
-  Search, 
-  SlidersHorizontal, 
-  Calendar, 
-  MoreVertical, 
-  Building2,
-  ChevronLeft,
-  ChevronRight,
-  Info
+  Info,
+  Loader2,
+  SlidersHorizontal
 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-
-interface TimeCardEntry {
-  id: string;
-  employee: {
-    name: string;
-    employeeId: string;
-    imageUrl?: string;
-  };
-  shop: {
-    name: string;
-  };
-  date: string;
-  day: string;
-  clockIn: string;
-  clockOut: string;
-  totalHours: string;
-  status: "ACTIVE" | "COMPLETED";
-  notes?: string;
-}
-
-const mockTimeCards: TimeCardEntry[] = [
-  {
-    id: "1",
-    employee: { name: "John Mensah", employeeId: "EMP-1001" },
-    shop: { name: "Accra Main Branch" },
-    date: "May 31, 2024",
-    day: "Fri",
-    clockIn: "08:05 AM",
-    clockOut: "05:32 PM",
-    totalHours: "9.45",
-    status: "ACTIVE",
-    notes: "End of month stock count"
-  },
-  {
-    id: "2",
-    employee: { name: "Abena Boateng", employeeId: "EMP-1002" },
-    shop: { name: "Tema Community 18" },
-    date: "May 31, 2024",
-    day: "Fri",
-    clockIn: "08:15 AM",
-    clockOut: "05:00 PM",
-    totalHours: "8.75",
-    status: "ACTIVE"
-  },
-  {
-    id: "3",
-    employee: { name: "Kwame Asare", employeeId: "EMP-1003" },
-    shop: { name: "Kumasi Branch" },
-    date: "May 31, 2024",
-    day: "Fri",
-    clockIn: "09:00 AM",
-    clockOut: "06:15 PM",
-    totalHours: "9.25",
-    status: "ACTIVE",
-    notes: "Customer rush"
-  },
-  {
-    id: "4",
-    employee: { name: "Akosua Gyasi", employeeId: "EMP-1004" },
-    shop: { name: "Accra Mall Branch" },
-    date: "May 31, 2024",
-    day: "Fri",
-    clockIn: "08:30 AM",
-    clockOut: "04:30 PM",
-    totalHours: "8.00",
-    status: "ACTIVE"
-  },
-  {
-    id: "5",
-    employee: { name: "Kofi Adom", employeeId: "EMP-1005" },
-    shop: { name: "Takoradi Branch" },
-    date: "May 30, 2024",
-    day: "Thu",
-    clockIn: "08:10 AM",
-    clockOut: "05:10 PM",
-    totalHours: "9.00",
-    status: "ACTIVE"
-  },
-  {
-    id: "6",
-    employee: { name: "Ama Serwaa", employeeId: "EMP-1006" },
-    shop: { name: "Madina Branch" },
-    date: "May 30, 2024",
-    day: "Thu",
-    clockIn: "09:05 AM",
-    clockOut: "05:05 PM",
-    totalHours: "8.00",
-    status: "COMPLETED",
-    notes: "Half day"
-  }
-];
+import { Card } from "@/components/ui/card";
+import { useTotalHoursWorkedStore } from "@/store/employee/total-hours-worked-store";
+import { useShopStore } from "@/store/shopStore";
+import { TimeCardTableMeta, totalHoursWorkedColumnDef } from "@/components/tablesColumnDef/business/employee/totalHoursWorkedColumnDef";
+import TableMain from "@/components/reusables/table/TableMain";
+import { TimeCard, TimeCardStatus } from "@/types/timecards.type";
+import CustomButton from "@/components/reusables/CustomButton";
+import React from "react";
+import { AppSheet } from "@/components/reusables/AppSheet";
+import TimeCardDetailsCard from "@/components/detials-components/employee/TimeCardDetailsCardViewer";
 
 export default function TotalHoursWorkedPage() {
-  const [activeTab, setActiveTab] = React.useState<"all" | "summary">("all");
+  const { isLoading, fetchTimeCards, timeCards, meta } = useTotalHoursWorkedStore();
+  const { fetchShops, shops } = useShopStore();
 
-  const getInitials = (name: string) => {
-    return name.split(" ").map(n => n[0]).join("").toUpperCase();
+  // Local state for filter inputs with proper typing
+  const [selectedShopId, setSelectedShopId] = React.useState<string>("");
+  const [selectedStatus, setSelectedStatus] = React.useState<TimeCardStatus | "">("");
+  const [selectedPeriod, setSelectedPeriod] = React.useState<string>("this-month");
+  const [startDate, setStartDate] = React.useState<string>("");
+  const [endDate, setEndDate] = React.useState<string>("");
+  const [pageSize, setPageSize] = React.useState<number>(100);
+
+  const [selectedTimeCard, setSelectedTimeCard] = React.useState<TimeCard | null>(null);
+  const [isTimeCardDrawerOpen, setIsTimeCardDrawerOpen] = React.useState(false);
+
+  // Fetch initial data on mount
+  React.useEffect(() => {
+    fetchTimeCards({ period: "this-month", limit: pageSize });
+    fetchShops();
+  }, [fetchTimeCards, fetchShops, pageSize]);
+
+  // Handler when clicking "Apply"
+  const handleApplyFilters = () => {
+    fetchTimeCards({
+      shopId: selectedShopId === "" ? undefined : selectedShopId,
+      status: selectedStatus === "" ? undefined : selectedStatus,
+      period: startDate || endDate ? undefined : selectedPeriod, // Clear period if custom dates are provided, or keep both depending on backend logic
+      startDate: startDate === "" ? undefined : startDate,
+      endDate: endDate === "" ? undefined : endDate,
+      limit: pageSize,
+      page: 1,
+    });
   };
+
+  // Safe fallback for metrics coming from the API meta response
+  const metrics = meta?.metrics;
 
   return (
     <div className="w-full space-y-6 p-6 lg:p-8 bg-slate-50/50 min-h-screen font-sans">
@@ -140,17 +68,9 @@ export default function TotalHoursWorkedPage() {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Total Hours Worked</h1>
           <p className="text-xs text-slate-500 mt-0.5">Track and review total working hours for employees across all shops.</p>
         </div>
-        <div className="flex items-center gap-2.5">
-          <Button variant="outline" size="sm" className="h-9 text-xs border-slate-200 text-slate-700 bg-white">
-            <Download className="h-3.5 w-3.5 mr-1.5 text-slate-500" /> Export
-          </Button>
-          <Button size="sm" className="h-9 text-xs bg-blue-600 hover:bg-blue-700 text-white shadow-xs">
-            <Plus className="h-3.5 w-3.5 mr-1.5" /> Add Time Card
-          </Button>
-        </div>
       </div>
 
-      {/* 2. Top Analytics Metrics Cards */}
+      {/* 2. Top Analytics Metrics Cards with Loading Spinner */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         
         <Card className="bg-white border-slate-200/80 shadow-xs rounded-2xl p-4 flex flex-col justify-between">
@@ -159,8 +79,16 @@ export default function TotalHoursWorkedPage() {
             <div className="p-2 rounded-xl bg-blue-50 text-blue-600"><Clock className="h-4 w-4" /></div>
           </div>
           <div>
-            <div className="text-xl font-bold text-slate-900">1,248.75 <span className="text-xs font-normal text-slate-500">hrs</span></div>
-            <span className="text-[11px] text-slate-400">All Time</span>
+            <div className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin text-blue-600 my-1" />
+              ) : (
+                <>
+                  {metrics?.totalHoursSum ? String(metrics.totalHoursSum) : "1,248.75"} <span className="text-xs font-normal text-slate-500">hrs</span>
+                </>
+              )}
+            </div>
+            <span className="text-[11px] text-slate-400">Filtered Range</span>
           </div>
         </Card>
 
@@ -170,7 +98,13 @@ export default function TotalHoursWorkedPage() {
             <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600"><Users className="h-4 w-4" /></div>
           </div>
           <div>
-            <div className="text-xl font-bold text-slate-900">42</div>
+            <div className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin text-emerald-600 my-1" />
+              ) : (
+                metrics?.activeEmployees ?? 42
+              )}
+            </div>
             <span className="text-[11px] text-emerald-600 font-medium">Active Employees</span>
           </div>
         </Card>
@@ -181,7 +115,15 @@ export default function TotalHoursWorkedPage() {
             <div className="p-2 rounded-xl bg-purple-50 text-purple-600"><CalendarDays className="h-4 w-4" /></div>
           </div>
           <div>
-            <div className="text-xl font-bold text-slate-900">8.23 <span className="text-xs font-normal text-slate-500">hrs</span></div>
+            <div className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin text-purple-600 my-1" />
+              ) : (
+                <>
+                  {metrics?.avgHoursPerEmployee ? String(metrics.avgHoursPerEmployee) : "8.23"} <span className="text-xs font-normal text-slate-500">hrs</span>
+                </>
+              )}
+            </div>
             <span className="text-[11px] text-slate-400">Across Employees</span>
           </div>
         </Card>
@@ -192,7 +134,13 @@ export default function TotalHoursWorkedPage() {
             <div className="p-2 rounded-xl bg-amber-50 text-amber-600"><Store className="h-4 w-4" /></div>
           </div>
           <div>
-            <div className="text-xl font-bold text-slate-900">8</div>
+            <div className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin text-amber-600 my-1" />
+              ) : (
+                shops.length || metrics?.totalShops || 8
+              )}
+            </div>
             <span className="text-[11px] text-slate-400">Active Shops</span>
           </div>
         </Card>
@@ -203,7 +151,15 @@ export default function TotalHoursWorkedPage() {
             <div className="p-2 rounded-xl bg-teal-50 text-teal-600"><TrendingUp className="h-4 w-4" /></div>
           </div>
           <div>
-            <div className="text-xl font-bold text-slate-900">184.50 <span className="text-xs font-normal text-slate-500">hrs</span></div>
+            <div className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin text-teal-600 my-1" />
+              ) : (
+                <>
+                  {metrics?.thisMonthHours ? String(metrics.thisMonthHours) : "184.50"} <span className="text-xs font-normal text-slate-500">hrs</span>
+                </>
+              )}
+            </div>
             <span className="text-[11px] text-slate-400">Total Hours</span>
           </div>
         </Card>
@@ -212,49 +168,90 @@ export default function TotalHoursWorkedPage() {
 
       {/* 3. Filters Toolbar Card */}
       <Card className="bg-white border-slate-200/80 shadow-xs rounded-2xl p-4 space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
           
-          {/* Date Range Selector */}
+          {/* Period Selector */}
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-slate-500">Date Range</label>
-            <div className="flex items-center justify-between px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-800">
-              <span>May 1, 2024 - May 31, 2024</span>
-              <Calendar className="h-3.5 w-3.5 text-slate-400" />
-            </div>
+            <label className="text-[11px] font-semibold text-slate-500">Period Preset</label>
+            <select 
+              value={selectedPeriod}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                setSelectedPeriod(e.target.value);
+                setStartDate(""); // clear custom dates if choosing preset
+                setEndDate("");
+              }}
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 focus:outline-none"
+            >
+              <option value="today">Today</option>
+              <option value="this-week">This Week</option>
+              <option value="this-month">This Month</option>
+              <option value="last-month">Last Month</option>
+            </select>
           </div>
 
-          {/* Employee Dropdown Filter */}
+          {/* Start Date Filter */}
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-slate-500">Employee</label>
-            <select className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 focus:outline-none">
-              <option>All Employees</option>
-            </select>
+            <label className="text-[11px] font-semibold text-slate-500">Start Date</label>
+            <input 
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 focus:outline-none"
+            />
+          </div>
+
+          {/* End Date Filter */}
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold text-slate-500">End Date</label>
+            <input 
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 focus:outline-none"
+            />
           </div>
 
           {/* Shop Dropdown Filter */}
           <div className="space-y-1">
             <label className="text-[11px] font-semibold text-slate-500">Shop</label>
-            <select className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 focus:outline-none">
-              <option>All Shops</option>
+            <select 
+              value={selectedShopId}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedShopId(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 focus:outline-none"
+            >
+              <option value="">All Shops</option>
+              {shops.map((shop) => (
+                <option key={shop.id} value={shop.id}>
+                  {shop.name}
+                </option>
+              ))}
             </select>
           </div>
 
           {/* Status Filter */}
           <div className="space-y-1">
             <label className="text-[11px] font-semibold text-slate-500">Status</label>
-            <select className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 focus:outline-none">
-              <option>All Status</option>
+            <select 
+              value={selectedStatus}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedStatus(e.target.value as TimeCardStatus | "")}
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 focus:outline-none"
+            >
+              <option value="">All Status</option>
+              <option value="ACTIVE">Active</option>
+              <option value="COMPLETED">Completed</option>
+              <option value="MISSED_CLOCK_OUT">Missed Clock Out</option>
             </select>
           </div>
 
           {/* Action Buttons */}
           <div className="flex items-end gap-2 pt-1 sm:pt-0">
-            <Button variant="outline" className="flex-1 h-9 text-xs border-slate-200 text-slate-700 bg-white rounded-xl">
-              <SlidersHorizontal className="h-3.5 w-3.5 mr-1.5 text-slate-500" /> Filters
-            </Button>
-            <Button className="flex-1 h-9 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-xs">
-              Apply
-            </Button>
+            <CustomButton
+             customVariant="primary"
+             text="Apply"
+             className="w-full h-9 text-xs"
+             onClick={handleApplyFilters}
+             icon = { <SlidersHorizontal className="h-5 w-5 " />}
+            />
           </div>
 
         </div>
@@ -266,162 +263,50 @@ export default function TotalHoursWorkedPage() {
         </div>
       </Card>
 
-      {/* 4. Tab Navigation & Search Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-3">
-        <div className="flex items-center gap-6">
-          <button 
-            onClick={() => setActiveTab("all")}
-            className={`text-xs font-semibold pb-1 transition-all border-b-2 ${
-              activeTab === "all" 
-                ? "text-blue-600 border-blue-600" 
-                : "text-slate-500 border-transparent hover:text-slate-800"
-            }`}
-          >
-            All Time Cards
-          </button>
-          <button 
-            onClick={() => setActiveTab("summary")}
-            className={`text-xs font-semibold pb-1 transition-all border-b-2 ${
-              activeTab === "summary" 
-                ? "text-blue-600 border-blue-600" 
-                : "text-slate-500 border-transparent hover:text-slate-800"
-            }`}
-          >
-            Summary by Employee
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
-            <Input 
-              placeholder="Search employee or notes..." 
-              className="pl-9 h-9 text-xs bg-white border-slate-200 rounded-xl"
-            />
-          </div>
-          <Button variant="outline" size="sm" className="h-9 text-xs border-slate-200 text-slate-700 bg-white rounded-xl shrink-0">
-            Column
-          </Button>
-        </div>
-      </div>
-
       {/* 5. Data Table Component */}
-      <Card className="bg-white border-slate-200/80 shadow-xs rounded-2xl overflow-hidden">
-        <Table>
-          <TableHeader className="bg-slate-50/70 border-b border-slate-100">
-            <TableRow>
-              <TableHead className="w-12 text-[11px] font-bold text-slate-500">#</TableHead>
-              <TableHead className="text-[11px] font-bold text-slate-500">Employee</TableHead>
-              <TableHead className="text-[11px] font-bold text-slate-500">Shop</TableHead>
-              <TableHead className="text-[11px] font-bold text-slate-500">Date</TableHead>
-              <TableHead className="text-[11px] font-bold text-slate-500">Clock In</TableHead>
-              <TableHead className="text-[11px] font-bold text-slate-500">Clock Out</TableHead>
-              <TableHead className="text-[11px] font-bold text-slate-500">Total Hours</TableHead>
-              <TableHead className="text-[11px] font-bold text-slate-500">Status</TableHead>
-              <TableHead className="text-[11px] font-bold text-slate-500">Notes</TableHead>
-              <TableHead className="w-12 text-right text-[11px] font-bold text-slate-500">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {mockTimeCards.map((item, index) => (
-              <TableRow key={item.id} className="hover:bg-slate-50/50 transition-colors border-b border-slate-100">
-                
-                <TableCell className="text-xs font-medium text-slate-500">{index + 1}</TableCell>
-                
-                <TableCell>
-                  <div className="flex items-center gap-2.5">
-                    <Avatar className="h-8 w-8 rounded-full border border-slate-200">
-                      <AvatarFallback className="bg-blue-900 text-white text-[10px] font-bold">
-                        {getInitials(item.employee.name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="text-xs font-semibold text-slate-900">{item.employee.name}</div>
-                      <div className="text-[10px] font-mono text-slate-400">{item.employee.employeeId}</div>
-                    </div>
-                  </div>
-                </TableCell>
-
-                <TableCell>
-                  <div className="flex items-center gap-1.5 text-xs text-slate-700">
-                    <Building2 className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                    <span>{item.shop.name}</span>
-                  </div>
-                </TableCell>
-
-                <TableCell>
-                  <div className="text-xs font-medium text-slate-800">{item.date}</div>
-                  <div className="text-[10px] text-slate-400">{item.day}</div>
-                </TableCell>
-
-                <TableCell className="text-xs font-medium text-slate-700">{item.clockIn}</TableCell>
-                
-                <TableCell className="text-xs font-medium text-slate-700">{item.clockOut}</TableCell>
-
-                <TableCell className="text-xs font-bold text-blue-600">{item.totalHours}</TableCell>
-
-                <TableCell>
-                  <Badge 
-                    variant="outline" 
-                    className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                      item.status === "ACTIVE" 
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
-                        : "bg-slate-100 text-slate-700 border-slate-200"
-                    }`}
-                  >
-                    {item.status}
-                  </Badge>
-                </TableCell>
-
-                <TableCell className="text-xs text-slate-500 truncate max-w-[150px]">
-                  {item.notes || "—"}
-                </TableCell>
-
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-700 rounded-lg">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-
-        {/* 6. Pagination Footer */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-slate-100 bg-slate-50/40">
-          <span className="text-xs text-slate-500">Showing 1 to 10 of 142 time cards</span>
-          
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 text-xs text-slate-500 mr-4">
-              <span>10 / page</span>
-            </div>
-
-            <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg border-slate-200 bg-white" disabled>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-
-            <Button size="sm" className="h-8 w-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs">
-              1
-            </Button>
-            <Button variant="outline" size="sm" className="h-8 w-8 rounded-lg border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50">
-              2
-            </Button>
-            <Button variant="outline" size="sm" className="h-8 w-8 rounded-lg border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50">
-              3
-            </Button>
-            <span className="text-xs text-slate-400 px-1">...</span>
-            <Button variant="outline" size="sm" className="h-8 w-8 rounded-lg border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50">
-              15
-            </Button>
-
-            <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg border-slate-200 bg-white text-slate-700 hover:bg-slate-50">
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+      <Card className="border border-slate-200/70 shadow-sm rounded-xl overflow-hidden bg-white w-full">
+        <div className="w-full overflow-x-auto">
+          <TableMain
+            columns={totalHoursWorkedColumnDef}
+            data={timeCards || []}
+            loading={isLoading}
+            onPageSizeChange={(size: number) => {
+              setPageSize(size);
+              fetchTimeCards({ 
+                limit: size, 
+                shopId: selectedShopId || undefined,
+                status: selectedStatus ? selectedStatus : undefined,
+                period: startDate || endDate ? undefined : selectedPeriod,
+                startDate: startDate || undefined,
+                endDate: endDate || undefined
+              });
+            }}
+            columnVisibilityFilter={true}
+            tableExportButtonVisible={true}
+            tableFilterButtonVisible={true}
+            placeholder="Search key word"            
+            searchKey="employee"
+            meta={{
+              onViewTimeCard(timeCard) {
+                  setSelectedTimeCard(timeCard)
+                  setIsTimeCardDrawerOpen(true)
+              },
+            } as TimeCardTableMeta}
+          />
         </div>
       </Card>
 
+    <AppSheet
+      isOpen={isTimeCardDrawerOpen}
+      onClose={() => setIsTimeCardDrawerOpen(false)}
+      title="Employee Time Card"
+      description="View comprehensive daily time logs, clock-in/out stamps, and total hours worked for this pay period."
+      maxWidth="lg"
+    >
+      {selectedTimeCard && (
+        <TimeCardDetailsCard timeCard={selectedTimeCard} />
+      )}  
+    </AppSheet>
     </div>
   );
 }

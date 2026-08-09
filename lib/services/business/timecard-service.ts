@@ -5,6 +5,7 @@ import { ClockInDTO, ClockOutDTO, TimeCardQueryFilters } from "@/types/timecards
 import { Decimal } from "@prisma/client/runtime/client";
 import { NotificationService } from "./notification-service";
 import { NotificationCategory, NotificationChannel, NotificationPriority } from "@/generated/prisma/enums";
+import { Prisma } from "@/generated/prisma/client";
 
 
 
@@ -338,5 +339,147 @@ static async getTimeCardLogs(filters: TimeCardQueryFilters): Promise<AppResponse
   }
  }
 
+
+/**
+   * Retrieves paginated and filtered time card logs with analytics counters safely typed.
+   */
+ static async totalHoursWorked(
+    filters: TimeCardQueryFilters & { page?: number; limit?: number; search?: string }
+  ): Promise<AppResponse> {
+    try {
+      const { 
+        businessId, 
+        shopId, 
+        employeeId, 
+        status, 
+        startDate, 
+        endDate, 
+        search,
+        page = 1, 
+        limit = 10 
+      } = filters;
+
+      if (!businessId) {
+        return { success: false, error: "Business ID is required.", status: 400 };
+      }
+
+      const skip = (page - 1) * limit;
+
+      const whereClause: Prisma.TimeCardWhereInput = {
+        businessId,
+        ...(shopId ? { shopId } : {}),
+        ...(employeeId ? { employeeId } : {}),
+        ...(status ? { status } : {}),
+        ...((startDate || endDate) ? {
+          date: {
+            ...(startDate ? { gte: new Date(`${startDate}T00:00:00.000Z`) } : {}),
+            ...(endDate ? { lte: new Date(`${endDate}T23:59:59.999Z`) } : {}),
+          }
+        } : {}),
+        ...(search ? {
+          OR: [
+            { notes: { contains: search, mode: Prisma.QueryMode.insensitive } },
+            { 
+              employee: {
+                OR: [
+                  { firstName: { contains: search, mode: Prisma.QueryMode.insensitive } },
+                  { lastName: { contains: search, mode: Prisma.QueryMode.insensitive } },
+                  { customId: { contains: search, mode: Prisma.QueryMode.insensitive } }
+                ]
+              }
+            }
+          ]
+        } : {})
+      };
+
+      // Execute queries in parallel to power both the table and all top KPI cards
+      const [
+        timeCards, 
+        totalCount, 
+        aggregateStats, 
+        activeEmployeesList, 
+        totalShopsCount, 
+        monthlyStats
+      ] = await Promise.all([
+        prisma.timeCard.findMany({
+          where: whereClause,
+          include: {
+            employee: {
+              select: { firstName: true, lastName: true, designation: true, imageUrl: true, customId: true },
+            },
+            shop: {
+              select: { id: true, name: true, slug: true },
+            },
+          },
+          orderBy: { clockIn: "desc" },
+          skip,
+          take: limit,
+        }),
+        prisma.timeCard.count({ where: whereClause }),
+        prisma.timeCard.aggregate({
+          where: whereClause,
+          _sum: { totalHours: true },
+        }),
+        // Get unique active employees for the filtered scope
+        prisma.timeCard.findMany({
+          where: whereClause,
+          select: { employeeId: true },
+          distinct: ["employeeId"],
+        }),
+        // Total shops count for the business
+        prisma.shop.count({
+          where: { businessId },
+        }),
+        
+        // Current month's aggregated hours
+        prisma.timeCard.aggregate({
+          where: {
+            ...whereClause,
+            date: {
+              gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+              lte: new Date(),
+            }
+          },
+          _sum: { totalHours: true },
+        })
+      ]);
+
+      const totalHoursSum = aggregateStats._sum.totalHours ?? 0;
+      const activeEmployeesTotal = activeEmployeesList.length;
+      
+      // Calculate average hours per active employee safely
+      const avgHoursPerEmployee = activeEmployeesTotal > 0 
+        ? Number(Number(totalHoursSum) / activeEmployeesTotal).toFixed(2)
+        : 0;
+
+      return { 
+        success: true, 
+        data: timeCards,
+        meta: { 
+          pagination: {
+            total: totalCount,
+            page,
+            limit,
+            totalPages: Math.ceil(totalCount / limit),
+          },
+          metrics: {
+            totalHoursSum,
+            activeEmployees: activeEmployeesTotal,
+            avgHoursPerEmployee,
+            totalShops: totalShopsCount,
+            thisMonthHours: monthlyStats._sum.totalHours ?? 0,
+          }
+        }, 
+        status: 200 
+      };
+
+    } catch (error: unknown) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "An internal server error occurred while retrieving logs.",
+        status: 500
+      };
+    }
+  }
 
 }
