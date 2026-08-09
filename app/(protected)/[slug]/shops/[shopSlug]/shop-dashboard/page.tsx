@@ -16,9 +16,11 @@ import {
   Mail, 
   Calendar,
   ChevronDown,
-  ArrowUpRight,
   Sparkles,
-  Store
+  Loader2,
+  MoreHorizontal,
+  ArrowUpDown,
+  SlidersHorizontal
 } from "lucide-react";
 import hasAccess from "@/lib/accessPermissionSecurity";
 
@@ -26,6 +28,21 @@ import hasAccess from "@/lib/accessPermissionSecurity";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 // Recharts Graphing Infrastructure 
 import { 
@@ -38,53 +55,27 @@ import {
   CartesianGrid, 
   Tooltip 
 } from "recharts";
+import { useShopDashboardStore } from "@/store/analytics-dashbaords/shop-dashboardStore";
+import AppLoader from "@/components/loaders/app-loader";
+import { DateFilterPreset } from "@/lib/services/analytics_dashboards/shop-dashbaord.service";
 
 // ============================================================================
-// BRAND DESIGN TOKENS (Sourced from image_b279cc.jpg)
+// BRAND DESIGN TOKENS
 // ============================================================================
 const VISUAL_TOKENS = {
   salesFill: "rgba(59, 130, 246, 0.08)",
-  salesLine: "#3b82f6",     // Royal Blue Accent
+  salesLine: "#3b82f6",    // Royal Blue Accent
   txLine: "#10b981",        // Emerald Green Dash
   gridBorder: "#f1f5f9",    // Slate 100 Divider
   textMuted: "#94a3b8"       // Slate 400 Labels
 };
 
 // ============================================================================
-// DATA FEEDS
-// ============================================================================
-const HOURLY_SALES_DATA = [
-  { time: "12 AM", sales: 100, tx: 5 },
-  { time: "4 AM", sales: 1200, tx: 28 },
-  { time: "8 AM", sales: 2400, tx: 55 },
-  { time: "12 PM", sales: 3200, tx: 78 },
-  { time: "4 PM", sales: 4100, tx: 92 },
-  { time: "8 PM", sales: 1800, tx: 40 },
-  { time: "12 AM", sales: 200, tx: 8 },
-];
-
-const TOP_PRODUCTS = [
-  { rank: 1, name: "Coca Cola 500ml", qty: 32, sales: "₵240.00", emoji: "🥤" },
-  { rank: 2, name: "FanIce 500ml", qty: 28, sales: "₵196.00", emoji: "🍦" },
-  { rank: 3, name: "Voltic Water 500ml", qty: 25, sales: "₵125.00", emoji: "💧" },
-  { rank: 4, name: "Indomie Chicken", qty: 20, sales: "₵200.00", emoji: "🍜" },
-  { rank: 5, name: "Milo Sachet", qty: 18, sales: "₵90.00", emoji: "☕" },
-];
-
-const RECENT_SALES = [
-  { id: "INV-00128", time: "11:45 AM", amount: "₵45.00" },
-  { id: "INV-00127", time: "11:30 AM", amount: "₵23.00" },
-  { id: "INV-00126", time: "11:15 AM", amount: "₵67.00" },
-  { id: "INV-00125", time: "11:00 AM", amount: "₵12.00" },
-  { id: "INV-00124", time: "10:45 AM", amount: "₵34.00" },
-];
-
-// ============================================================================
 // REUSABLE SUB-COMPONENTS
 // ============================================================================
 type UpperCardProps = {
   title: string;
-  value: string;
+  value: string | number;
   growth: string;
   icon: React.ReactNode;
   bgTone: string;
@@ -113,9 +104,15 @@ function MicroMetricCard({ title, value, growth, icon, bgTone }: UpperCardProps)
 // CORE CONTROLLER MODULE
 // ============================================================================
 export default function ShopDashboard() {
-  const { slug } = useParams();
+  // Zustand Store Integration
   const { user, currentSlug } = useAuthStore();
+  const {metrics,salesOverview,topSellingProducts,cashRegister,inventory,recentSales,shopInfo,isLoading,fetchDashboardData} = useShopDashboardStore();
+  const { slug } = useParams();
   const router = useRouter();
+  
+  const [selectedFilter, setSelectedFilter] = React.useState<DateFilterPreset>("daily");
+  const [startDate, setCustomStartDate] = React.useState<string | Date | undefined>(undefined);
+const [endDate, setCustomEndDate] = React.useState<string | Date | undefined>(undefined);
 
   useEffect(() => {
     if (!hasAccess(user, "dashboard")) {
@@ -123,74 +120,172 @@ export default function ShopDashboard() {
     }
   }, [user, router]);
 
+useEffect(() => {
+  if (user?.currentShop?.id) {
+    fetchDashboardData({ 
+      shopId: user.currentShop.id, 
+      filter: selectedFilter,
+      startDate: startDate instanceof Date ? startDate.toISOString() : startDate,
+      endDate: endDate instanceof Date ? endDate.toISOString() : endDate
+    });
+  }
+}, [user, selectedFilter, fetchDashboardData, startDate, endDate]);
+
   if (slug !== currentSlug) {
     router.push(`/${user?.business.slug}/dashboard`);
   }
 
   if (!user || !hasAccess(user, "dashboard")) return null;
 
+  // Show loading spinner while fetching dashboard payload if desired
+  if (isLoading && !metrics) {
+    return (
+      <AppLoader/>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50/60 p-4 lg:p-8 text-slate-900 font-sans antialiased">
       
-      {/* 💳 MODULE TOP NAVIGATION HEADER */}
-      <header className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-slate-900 flex items-center gap-2">
-            Welcome back, {user?.firstName}! <span className="animate-bounce">👋</span>
-          </h1>
-          <p className="text-sm font-medium text-slate-400 mt-0.5">
-            Here&apos;s what&apos;s happening in your shop today.
-          </p>
-        </div>
+{/* 💳 MODULE TOP NAVIGATION HEADER */}
+<header className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+  <div>
+    <h1 className="text-2xl font-black tracking-tight text-slate-900 flex items-center gap-2">
+      Welcome back, {user?.firstName}! <span className="animate-bounce">👋</span>
+    </h1>
+    <p className="text-sm font-medium text-slate-400 mt-0.5">
+      Here&apos;s what&apos;s happening in your shop today. {shopInfo?.name ? `(${shopInfo.name})` : ""}
+    </p>
+  </div>
 
-        <div className="flex items-center gap-3 self-end sm:self-auto">
-          <Button variant="outline" size="sm" className="bg-white border-slate-200 text-slate-700 font-semibold rounded-xl text-xs h-10 gap-2 shadow-sm">
-            <Calendar className="w-3.5 h-3.5 text-slate-400" /> Today, May 18, 2025 <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-          </Button>
-          <div className="h-10 w-10 rounded-xl bg-slate-900 flex items-center justify-center text-white text-sm font-bold shadow-md">
-            {user?.firstName?.[0]}{user?.lastName?.[0]}
-          </div>
-        </div>
-      </header>
-
-      {/* 🚀 QUICK HERO METRIC SUMMARY RAILS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <MicroMetricCard 
-          title="Total Sales" 
-          value="₵4,250.00" 
-          growth="12.5%" 
-          icon={<CreditCard className="w-5 h-5 text-blue-600" />} 
-          bgTone="bg-blue-50/80" 
+  <div className="flex flex-wrap items-center gap-3 self-end sm:self-auto">
+    {/* Conditional Custom Date Inputs */}
+    {selectedFilter === "custom" && (
+      <div className="flex items-center gap-2 animate-in fade-in duration-200">
+        <input 
+          type="date" 
+          className="h-8 px-2 text-xs font-semibold rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900"
+          value={startDate ? (typeof startDate === 'string' ? startDate : startDate.toISOString().split('T')[0]) : ''}
+          onChange={(e) => setCustomStartDate(e.target.value)}
         />
-        <MicroMetricCard 
-          title="Transactions" 
-          value="128" 
-          growth="8.2%" 
-          icon={<ShoppingCart className="w-5 h-5 text-indigo-600" />} 
-          bgTone="bg-indigo-50/80" 
-        />
-        <MicroMetricCard 
-          title="Average Sale" 
-          value="₵33.20" 
-          growth="4.1%" 
-          icon={<Sparkles className="w-5 h-5 text-purple-600" />} 
-          bgTone="bg-purple-50/80" 
-        />
-        <MicroMetricCard 
-          title="Items Sold" 
-          value="236" 
-          growth="10.3%" 
-          icon={<Package className="w-5 h-5 text-amber-600" />} 
-          bgTone="bg-amber-50/80" 
-        />
-        <MicroMetricCard 
-          title="Gross Profit" 
-          value="₵1,680.00" 
-          growth="11.6%" 
-          icon={<TrendingUp className="w-5 h-5 text-emerald-600" />} 
-          bgTone="bg-emerald-50/80" 
+        <span className="text-xs text-slate-400">to</span>
+        <input 
+          type="date" 
+          className="h-8 px-2 text-xs font-semibold rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900"
+          value={endDate ? (typeof endDate === 'string' ? endDate : endDate.toISOString().split('T')[0]) : ''}
+          onChange={(e) => setCustomEndDate(e.target.value)}
         />
       </div>
+    )}
+
+    {/* Dropdown Menu */}
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm" className="h-8 text-xs font-semibold rounded-lg border-slate-200 gap-1">
+          {selectedFilter === "daily" && "Today"}
+          {selectedFilter === "current_week" && "This Week"}
+          {selectedFilter === "current_month" && "This Month"}
+          {selectedFilter === "last_month" && "Last Month"}
+          {selectedFilter === "custom" && "Custom Range"}
+          <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-36 rounded-xl">
+        <DropdownMenuItem 
+          className="text-xs font-semibold" 
+          onClick={() => {
+            setSelectedFilter("daily");
+            setCustomStartDate(undefined);
+            setCustomEndDate(undefined);
+          }}
+        >
+          Today
+        </DropdownMenuItem>
+        <DropdownMenuItem 
+          className="text-xs font-semibold" 
+          onClick={() => {
+            setSelectedFilter("current_week");
+            setCustomStartDate(undefined);
+            setCustomEndDate(undefined);
+          }}
+        >
+          This Week
+        </DropdownMenuItem>
+        <DropdownMenuItem 
+          className="text-xs font-semibold" 
+          onClick={() => {
+            setSelectedFilter("current_month");
+            setCustomStartDate(undefined);
+            setCustomEndDate(undefined);
+          }}
+        >
+          This Month
+        </DropdownMenuItem>
+        <DropdownMenuItem 
+          className="text-xs font-semibold" 
+          onClick={() => {
+            setSelectedFilter("last_month");
+            setCustomStartDate(undefined);
+            setCustomEndDate(undefined);
+          }}
+        >
+          Last Month
+        </DropdownMenuItem>
+        <DropdownMenuItem 
+          className="text-xs font-semibold" 
+          onClick={() => {
+            setSelectedFilter("custom");
+          }}
+        >
+          Custom
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+
+    <div className="h-10 w-10 rounded-xl bg-slate-900 flex items-center justify-center text-white text-sm font-bold shadow-md">
+      {user?.firstName?.[0]}{user?.lastName?.[0]}
+    </div>
+  </div>
+</header>
+
+    {/* 🚀 QUICK HERO METRIC SUMMARY RAILS */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+      <MicroMetricCard 
+        title="Total Sales" 
+        value={`₵${metrics?.totalSales?.toFixed(2) ?? "0.00"}`} 
+        growth="--%" 
+        icon={<CreditCard className="w-5 h-5 text-blue-600" />} 
+        bgTone="bg-blue-50/80" 
+      />
+      <MicroMetricCard 
+        title="Transactions" 
+        value={String(metrics?.transactionsCount ?? 0)} 
+        growth="--%" 
+        icon={<ShoppingCart className="w-5 h-5 text-indigo-600" />} 
+        bgTone="bg-indigo-50/80" 
+      />
+      <MicroMetricCard 
+        title="Average Sale" 
+        value={`₵${metrics?.averageSale?.toFixed(2) ?? "0.00"}`} 
+        growth="--%" 
+        icon={<Sparkles className="w-5 h-5 text-purple-600" />} 
+        bgTone="bg-purple-50/80" 
+      />
+      <MicroMetricCard 
+        title="Items Sold" 
+        value={String(metrics?.itemsSold ?? 0)} 
+        growth="--%" 
+        icon={<Package className="w-5 h-5 text-amber-600" />} 
+        bgTone="bg-amber-50/80" 
+      />
+      <MicroMetricCard 
+        title="Gross Profit" 
+        value={`₵${metrics?.grossProfit?.toFixed(2) ?? "0.00"}`} 
+        growth="--%" 
+        icon={<TrendingUp className="w-5 h-5 text-emerald-600" />} 
+        bgTone="bg-emerald-50/80" 
+      />
+    </div>
 
       {/* 📊 CORE VISUAL GRAPH RAILS */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
@@ -209,15 +304,51 @@ export default function ShopDashboard() {
                     <span className="w-2.5 h-1 block border-t-2 border-dashed border-emerald-500" /> Transactions
                   </span>
                 </div>
-              </div>
-              <Button variant="outline" size="sm" className="h-8 text-xs font-semibold rounded-lg border-slate-200 gap-1">
-                Today <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-              </Button>
+              </div> 
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 text-xs font-semibold rounded-lg border-slate-200 gap-1">
+                  {selectedFilter === "daily" && "Today"}
+                  {selectedFilter === "current_week" && "This Week"}
+                  {selectedFilter === "current_month" && "This Month"}
+                  {selectedFilter === "last_month" && "Last Month"}
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-36 rounded-xl">
+                <DropdownMenuItem className="text-xs font-semibold" onClick={() => setSelectedFilter("daily")}>
+                  Today
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-xs font-semibold" onClick={() => setSelectedFilter("current_week")}>
+                  This Week
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-xs font-semibold" onClick={() => setSelectedFilter("current_month")}>
+                  This Month
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-xs font-semibold" onClick={() => setSelectedFilter("last_month")}>
+                  Last Month
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             </div>
 
             <div className="w-full h-64 text-xs font-medium">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={HOURLY_SALES_DATA} margin={{ top: 10, right: 5, left: -20, bottom: 0 }}>
+                  <AreaChart 
+                    data={
+                      Array.isArray(salesOverview) 
+                        ? salesOverview 
+                        : Object.entries(salesOverview ?? {}).map(([time, val]) => {
+                            const record = val as { sales: number; transactions: number };
+                            return {
+                              time,
+                              sales: record.sales,
+                              tx: record.transactions
+                            };
+                          })
+                    } 
+                    margin={{ top: 10, right: 5, left: -20, bottom: 0 }}
+                  >
                   <defs>
                     <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor={VISUAL_TOKENS.salesLine} stopOpacity={0.12}/>
@@ -256,38 +387,60 @@ export default function ShopDashboard() {
           </CardContent>
         </Card>
 
-        {/* FEED: TOP SELLING INVENTORY PRODUCTS */}
+        {/* FEED: TOP SELLING INVENTORY PRODUCTS (Using Shadcn Table) */}
         <Card className="lg:col-span-5 rounded-2xl border border-slate-200/60 bg-white shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-sm text-slate-900">Top Selling Products</h3>
-              <Button variant="ghost" className="h-8 text-xs font-bold text-blue-600 hover:text-blue-700 p-0">View All</Button>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600">
+                    <SlidersHorizontal className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40 rounded-xl">
+                  <DropdownMenuItem className="text-xs font-semibold gap-2">
+                    <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" /> Sort by Qty
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="text-xs font-semibold gap-2">
+                    <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" /> Sort by Amount
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="text-xs font-semibold text-blue-600">View All</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="text-[10px] uppercase font-bold text-slate-400 border-b border-slate-100">
-                    <th className="pb-2 font-semibold">#</th>
-                    <th className="pb-2 font-semibold">Product</th>
-                    <th className="pb-2 font-semibold text-right">Qty Sold</th>
-                    <th className="pb-2 font-semibold text-right">Sales (₵)</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50 text-xs">
-                  {TOP_PRODUCTS.map((prod) => (
-                    <tr key={prod.rank} className="hover:bg-slate-50/50">
-                      <td className="py-3 font-bold text-slate-400">{prod.rank}</td>
-                      <td className="py-3 font-semibold text-slate-800">
-                        <span className="mr-2 inline-block text-base">{prod.emoji}</span>
-                        {prod.name}
-                      </td>
-                      <td className="py-3 text-right font-bold text-slate-600">{prod.qty}</td>
-                      <td className="py-3 text-right font-black text-slate-900">{prod.sales}</td>
-                    </tr>
+              <Table>
+                <TableHeader>
+                  <TableRow className="text-[10px] uppercase font-bold text-slate-400 border-b border-slate-100 hover:bg-transparent">
+                    <TableHead className="pb-2 font-semibold w-10">#</TableHead>
+                    <TableHead className="pb-2 font-semibold">Product</TableHead>
+                    <TableHead className="pb-2 font-semibold text-right">Qty Sold</TableHead>
+                    <TableHead className="pb-2 font-semibold text-right">Sales (₵)</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody className="divide-y divide-slate-50 text-xs">
+                 {topSellingProducts?.map((prod, index) => (
+                    <TableRow key={prod.id} className="hover:bg-slate-50/50 border-none">
+                      <TableCell className="py-3 font-bold text-slate-400">{index + 1}</TableCell>
+                      <TableCell className="py-3 font-semibold text-slate-800">
+                        <span className="mr-2 inline-block text-base">📦</span>
+                        {prod.productName}
+                      </TableCell>
+                      <TableCell className="py-3 text-right font-bold text-slate-600">{prod.qtySold}</TableCell>
+                      <TableCell className="py-3 text-right font-black text-slate-900">₵{prod.salesAmount.toFixed(2)}</TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                  {(!topSellingProducts || topSellingProducts.length === 0) && (
+                    <TableRow className="border-none">
+                      <TableCell colSpan={4} className="py-6 text-center text-slate-400 font-medium">No sales recorded yet today.</TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
             </div>
           </CardContent>
         </Card>
@@ -301,7 +454,9 @@ export default function ShopDashboard() {
           <CardContent className="p-5 space-y-4 flex-1">
             <div className="flex items-center justify-between">
               <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider">Cash Register Status</h4>
-              <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 text-[10px] font-bold border border-emerald-100 rounded-md">Open</Badge>
+              <Badge className={`text-[10px] font-bold border rounded-md ${cashRegister?.status === "OPEN" ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-rose-50 text-rose-700 border-rose-100"}`}>
+                {cashRegister?.status === "OPEN" ? "Open" : "Closed"}
+              </Badge>
             </div>
             
             <div className="space-y-3 text-xs">
@@ -311,19 +466,21 @@ export default function ShopDashboard() {
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Opened By</p>
-                  <p className="font-bold text-slate-800">Kwadwo Mensah</p>
+                  <p className="font-bold text-slate-800">{cashRegister?.openedBy ?? "N/A"}</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+             <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 shrink-0 border border-slate-100">
                   <Clock className="w-4 h-4" />
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Opened At</p>
-                  <p className="font-bold text-slate-800">8:00 AM</p>
+                  <p className="font-bold text-slate-800">
+                    {cashRegister?.openedAt ? new Date(cashRegister.openedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "N/A"}
+                  </p>
                 </div>
-              </div>
+             </div>
 
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 shrink-0 border border-slate-100">
@@ -331,7 +488,7 @@ export default function ShopDashboard() {
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Opening Float</p>
-                  <p className="font-black text-slate-900">₵200.00</p>
+                  <p className="font-black text-slate-900">{cashRegister?.openingFloat ?? "₵0.00"}</p>
                 </div>
               </div>
             </div>
@@ -348,7 +505,18 @@ export default function ShopDashboard() {
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-4">
               <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider">Inventory Summary</h4>
-              <Button variant="ghost" className="h-6 text-[11px] font-bold text-blue-600 p-0">View All</Button>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-400 hover:text-slate-600 p-0">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-36 rounded-xl">
+                  <DropdownMenuItem className="text-xs font-semibold">Generate Report</DropdownMenuItem>
+                  <DropdownMenuItem className="text-xs font-semibold text-blue-600">View All</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             
             <div className="space-y-3.5">
@@ -356,25 +524,25 @@ export default function ShopDashboard() {
                 <span className="text-slate-500 font-semibold flex items-center gap-2">
                   <Package className="w-4 h-4 text-slate-400" /> Total Products
                 </span>
-                <span className="font-black text-slate-900 text-sm">1,245</span>
+                <span className="font-black text-slate-900 text-sm">{inventory?.totalProducts ?? 0}</span>
               </div>
               <div className="flex items-center justify-between text-xs pb-1.5 border-b border-slate-50">
                 <span className="text-slate-500 font-semibold flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-amber-500" /> Low Stock Items
                 </span>
-                <span className="font-black text-amber-600 text-sm">18</span>
+                <span className="font-black text-amber-600 text-sm">{inventory?.lowStockItems ?? 0}</span>
               </div>
               <div className="flex items-center justify-between text-xs pb-1.5 border-b border-slate-50">
                 <span className="text-slate-500 font-semibold flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-rose-500" /> Out of Stock Items
                 </span>
-                <span className="font-black text-rose-600 text-sm">4</span>
+                <span className="font-black text-rose-600 text-sm">{inventory?.outOfStockItems ?? 0}</span>
               </div>
               <div className="flex items-center justify-between text-xs pt-0.5">
                 <span className="text-slate-500 font-semibold flex items-center gap-2">
                   <CreditCard className="w-4 h-4 text-slate-400" /> Stock Value
                 </span>
-                <span className="font-black text-slate-900 text-sm">₵28,450.00</span>
+                <span className="font-black text-slate-900 text-sm">{inventory?.stockValue ?? "₵0.00"}</span>
               </div>
             </div>
           </CardContent>
@@ -385,19 +553,35 @@ export default function ShopDashboard() {
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-4">
               <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider">Recent Sales</h4>
-              <Button variant="ghost" className="h-6 text-[11px] font-bold text-blue-600 p-0">View All</Button>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-400 hover:text-slate-600 p-0">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-36 rounded-xl">
+                  <DropdownMenuItem className="text-xs font-semibold">Export Audit Log</DropdownMenuItem>
+                  <DropdownMenuItem className="text-xs font-semibold text-blue-600">View All</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             
             <div className="space-y-3">
-              {RECENT_SALES.map((sale, index) => (
-                <div key={index} className="flex items-center justify-between text-xs bg-slate-50/40 p-2 rounded-xl border border-slate-100/50">
+              {recentSales?.map((sale) => (
+                <div key={sale.id} className="flex items-center justify-between text-xs bg-slate-50/40 p-2 rounded-xl border border-slate-100/50">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-slate-400">{sale.time}</span>
-                    <span className="font-mono font-bold text-blue-600 hover:underline cursor-pointer">{sale.id}</span>
+                    <span className="text-[10px] font-bold text-slate-400">
+                      {new Date(sale.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                    <span className="font-mono font-bold text-blue-600 hover:underline cursor-pointer">{sale.invoiceNumber}</span>
                   </div>
-                  <span className="font-black text-slate-900">{sale.amount}</span>
+                  <span className="font-black text-slate-900">₵{sale.amount.toFixed(2)}</span>
                 </div>
               ))}
+              {(!recentSales || recentSales.length === 0) && (
+                <p className="text-xs text-slate-400 text-center py-4">No recent transactions.</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -407,9 +591,18 @@ export default function ShopDashboard() {
           <CardContent className="p-5 space-y-4">
             <div className="flex items-center justify-between pb-1">
               <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider">Shop Information</h4>
-              <Button variant="ghost" className="h-6 text-[11px] font-bold text-blue-600 p-0 flex items-center gap-1">
-                Edit Outlets
-              </Button>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-6 text-[11px] font-bold text-blue-600 p-0 flex items-center gap-1 hover:bg-transparent">
+                    Edit Outlets <ChevronDown className="w-3 h-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40 rounded-xl">
+                  <DropdownMenuItem className="text-xs font-semibold">Manage Locations</DropdownMenuItem>
+                  <DropdownMenuItem className="text-xs font-semibold">Switch Outlet</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
             <div className="space-y-3 text-xs">
@@ -417,7 +610,7 @@ export default function ShopDashboard() {
                 <MapPin className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Address</p>
-                  <p className="font-semibold text-slate-700">45 Anumansa Street, East Legon</p>
+                  <p className="font-semibold text-slate-700">{shopInfo?.address ?? "N/A"}</p>
                 </div>
               </div>
 
@@ -425,7 +618,7 @@ export default function ShopDashboard() {
                 <Phone className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Phone</p>
-                  <p className="font-semibold text-slate-700">+233 20 987 6543</p>
+                  <p className="font-semibold text-slate-700">{shopInfo?.phone ?? "N/A"}</p>
                 </div>
               </div>
 
@@ -433,7 +626,7 @@ export default function ShopDashboard() {
                 <Mail className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Email</p>
-                  <p className="font-semibold text-slate-700 truncate max-w-[180px]">mainbranch@kingzmen.com</p>
+                  <p className="font-semibold text-slate-700 truncate max-w-[180px]">{shopInfo?.email ?? "N/A"}</p>
                 </div>
               </div>
 
@@ -441,7 +634,7 @@ export default function ShopDashboard() {
                 <Clock className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Opening Hours</p>
-                  <p className="font-semibold text-slate-700">8:00 AM - 10:00 PM</p>
+                  <p className="font-semibold text-slate-700">{shopInfo?.openingHours ?? "N/A"}</p>
                 </div>
               </div>
             </div>
@@ -452,7 +645,7 @@ export default function ShopDashboard() {
 
       {/* 🏢 STICKY APPS METADATA FOOTER FRAME */}
       <footer className="mt-12 pt-4 border-t border-slate-200/60 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] font-bold text-slate-400 tracking-tight">
-        <p>© 2025 MultiPOS. All rights reserved.</p>
+        <p>© 2026 MultiPOS. All rights reserved.</p>
         <p className="font-mono uppercase">MultiPOS v1.0.0</p>
       </footer>
 
