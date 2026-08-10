@@ -24,6 +24,7 @@ import { CategoryDetailsDrawer } from "@/components/detials-components/analytics
 import { useShopStore } from "@/store/shopStore";
 import { useCategorySalesSummaryStore } from "@/store/analytics-dashbaords/sale-by-category-analyticsStore";
 import { CategoryTableDetailItem } from "@/types/types/sale-by-category-analytics.type";
+import CustomButton from "@/components/reusables/CustomButton";
 
 export default function SalesByCategoryView() {
   // Stores
@@ -100,14 +101,6 @@ export default function SalesByCategoryView() {
           <p className="text-sm text-slate-500">
             Analyse sales performance by product categories across all shops.
           </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" className="gap-2 border-slate-200 text-slate-700 bg-white shadow-xs">
-            <Download className="h-4 w-4" /> Export Report
-          </Button>
-          <Button variant="outline" className="gap-2 border-slate-200 text-slate-700 bg-white shadow-xs">
-            <Calendar className="h-4 w-4" /> Schedule Report
-          </Button>
         </div>
       </div>
 
@@ -330,13 +323,13 @@ export default function SalesByCategoryView() {
           {/* Reset Action */}
           <div>
             <label className="text-xs font-medium text-slate-500 block mb-1">&nbsp;</label>
-            <Button 
-              variant="ghost" 
-              onClick={handleResetFilters}
-              className="w-full h-10 text-xs rounded-xl text-slate-600 hover:bg-slate-100 font-semibold border border-transparent hover:border-slate-200"
-            >
-              <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Reset Filters
-            </Button>
+           <CustomButton
+              className="w-full"
+               onClick={handleResetFilters}
+               text="Reset Filters"
+               customVariant="primary"
+               icon={<RotateCcw className="h-3.5 w-3.5 mr-1.5" />}
+             />
           </div>
 
         </div>

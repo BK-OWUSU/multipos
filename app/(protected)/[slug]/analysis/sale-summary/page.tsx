@@ -19,6 +19,7 @@ import { DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuTrigger} 
 import { Table,TableBody,TableCell,TableHead,TableHeader, TableRow} from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { exportToExcel, exportToPDF } from "@/lib/exports/exportUtils";
+import CustomButton from "@/components/reusables/CustomButton";
 
 
 const CHART_COLORS = [
@@ -58,6 +59,19 @@ export default function SalesSummaryView() {
     });
     fetchShops();
   }, [selectedFilter, compareWithPrevious, dateRange, fetchSalesSummary, selectedShop, fetchShops]);
+
+
+    const handleResetFilters = () => {
+      setSelectedShop("all");
+      setSelectedFilter("current_month");
+      setDateRange({
+        start: format(startOfMonth(new Date()), "yyyy-MM-dd"),
+        end: format(new Date(), "yyyy-MM-dd")
+      });
+      setCompareWithPrevious(true);
+    };
+
+
   return (
     <div className="space-y-6 p-6 bg-slate-50/50 min-h-screen">
       
@@ -338,13 +352,13 @@ export default function SalesSummaryView() {
           {/* Reset Action (Expanded column layout adjustment and grid-cols-5 balance) */}
           <div>
             <label className="text-xs font-medium text-slate-500 block mb-1">&nbsp;</label>
-            <Button 
-              variant="ghost" 
-              onClick={() => { setSelectedFilter("current_month"); setSelectedShop("all"); setCompareWithPrevious(true); }}
-              className="w-full h-10 text-xs rounded-xl text-slate-600 hover:bg-slate-100 font-semibold border border-transparent hover:border-slate-200"
-            >
-              <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Reset Filters
-            </Button>
+             <CustomButton
+                className="w-full"
+                 onClick={handleResetFilters}
+                 text="Reset Filters"
+                 customVariant="primary"
+                 icon={<RotateCcw className="h-3.5 w-3.5 mr-1.5" />}
+               />
           </div>
 
         </div>

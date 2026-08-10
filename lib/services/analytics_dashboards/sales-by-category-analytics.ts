@@ -11,7 +11,6 @@ import {
   subDays,
   subWeeks,
   differenceInDays,
-  format
 } from "date-fns";
 
 export type DateFilterPreset = 
@@ -24,7 +23,7 @@ export type DateFilterPreset =
 
 interface CategorySalesAnalyticsQueryParams {
   businessId: string;
-  shopId?: string; // Optional: "All Shops" if omitted
+  shopId?: string; 
   filter?: DateFilterPreset;
   customStartDate?: string | Date;
   customEndDate?: string | Date;

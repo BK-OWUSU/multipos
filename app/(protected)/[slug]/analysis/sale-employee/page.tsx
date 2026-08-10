@@ -1,30 +1,103 @@
 "use client";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { 
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 import { 
   DollarSign, ShoppingBag, BarChart3, RefreshCcw, 
-  Download, Calendar, Filter, RotateCcw, ArrowUpRight, 
-  ArrowRight, ChevronLeft, ChevronRight 
+  Download, Calendar, RotateCcw, ArrowUpRight, 
+  ArrowRight, ChevronDown, Store, ArrowDownRight, Loader2
 } from "lucide-react";
+import { startOfMonth, format } from "date-fns";
 import CurrencyFormatter from "@/components/reusables/CurrencyFormter";
 import { ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-
-// Mock data for Sales by Employee Table & Charts
-const salesByEmployeeData = [
-  { name: "Michael Brown", branch: "Accra Mall Branch", value: 24580, percentage: "19.7%", color: "#2563eb", transactions: 256, aov: 21.80, itemsSold: 712, discounts: 1240.00, refunds: 60.00, growth: "+14.2%" },
-  { name: "Sarah Johnson", branch: "West Hills Branch", value: 18760, percentage: "15.0%", color: "#10b981", transactions: 198, aov: 20.13, itemsSold: 542, discounts: 980.00, refunds: 40.00, growth: "+11.8%" },
-  { name: "Kwame Mensah", branch: "Kumasi City Branch", value: 15430, percentage: "12.4%", color: "#f59e0b", transactions: 171, aov: 18.97, itemsSold: 439, discounts: 760.00, refunds: 30.00, growth: "+9.6%" },
-  { name: "Ama Serwaa", branch: "Accra Mall Branch", value: 12650, percentage: "10.1%", color: "#8b5cf6", transactions: 139, aov: 19.64, itemsSold: 361, discounts: 540.00, refunds: 20.00, growth: "+24.6%" },
-  { name: "Kofi Boateng", branch: "Takoradi Branch", value: 10230, percentage: "8.2%", color: "#06b6d4", transactions: 112, aov: 18.78, itemsSold: 285, discounts: 420.00, refunds: 10.00, growth: "+18.3%" },
-  { name: "Emely Davis", branch: "West Hills Branch", value: 8460, percentage: "6.8%", color: "#ec4899", transactions: 94, aov: 19.00, itemsSold: 210, discounts: 310.00, refunds: 15.00, growth: "+6.7%" },
-  { name: "David Wilson", branch: "Kumasi City Branch", value: 6570, percentage: "5.3%", color: "#94a3b8", transactions: 73, aov: 18.50, itemsSold: 165, discounts: 210.00, refunds: 5.00, growth: "+3.2%" },
-];
+import TableMain from "@/components/reusables/table/TableMain";
+import { AppSheet } from "@/components/reusables/AppSheet";
+import { EmployeeDetailsDrawer } from "@/components/detials-components/analytics/saleByEmployeeDetailsViewer";
+import { employeeSalesColumns, EmployeeSalesTableMeta } from "@/components/tablesColumnDef/business/analytics/saleByEmployeeAnalyticsColumnDef";
+import { EmployeeTableDetailItem } from "@/types/types/sale-by-employee-analytics.types";
+import { useShopStore } from "@/store/shopStore";
+import { useEmployeeSalesSummaryStore } from "@/store/analytics-dashbaords/sale-by-employee-analyticsStore";
+import CustomButton from "@/components/reusables/CustomButton";
 
 export default function SalesByEmployeeView() {
-  const [dateRange] = useState("May 1, 2026 - May 27, 2026");
+    const {
+      isLoading, metrics,
+      donutChartData, barChartData,
+      topListByGrowth, tableDetails, 
+      fetchEmployeeSalesSummary
+    } = useEmployeeSalesSummaryStore();
+    const { shops, fetchShops } = useShopStore();
+
+    const [compareWithPrevious, setCompareWithPrevious] = useState<boolean>(true);
+
+    // Filter States
+    const [selectedShop, setSelectedShop] = useState<string>("all");
+    const [selectedFilter, setSelectedFilter] = useState<"daily" | "current_week" | "current_month" | "last_month" | "custom">("current_month");
+    const [selectedGroupBy, setSelectedGroupBy] = useState<"Employee" | "Shop" | "Daily" | "None">("None");
+    
+    const [dateRange, setDateRange] = useState<{ start: string; end: string }>({
+      start: format(startOfMonth(new Date()), "yyyy-MM-dd"),
+      end: format(new Date(), "yyyy-MM-dd")
+    });
+
+    // Fetch shops on mount
+    useEffect(() => {
+      fetchShops();
+    }, [fetchShops]);
+
+    // Fetch report data when filters change
+    const loadData = useCallback(() => {
+      fetchEmployeeSalesSummary({
+        shopId: selectedShop === "all" ? undefined : selectedShop,
+        filter: selectedFilter,
+        startDate: selectedFilter === "custom" ? dateRange.start : undefined,
+        endDate: selectedFilter === "custom" ? dateRange.end : undefined,
+        compareWithPrevious,
+        groupBy: selectedGroupBy === "None" ? undefined: selectedGroupBy
+      });
+    }, [fetchEmployeeSalesSummary, selectedShop, selectedFilter, dateRange.start, dateRange.end, compareWithPrevious, selectedGroupBy]);
+
+    useEffect(() => {
+      loadData();
+    }, [loadData]);
+
+    const handleResetFilters = () => {
+      setSelectedShop("all");
+      setSelectedFilter("current_month");
+      setDateRange({
+        start: format(startOfMonth(new Date()), "yyyy-MM-dd"),
+        end: format(new Date(), "yyyy-MM-dd")
+      });
+      setCompareWithPrevious(true);
+      setSelectedGroupBy("None");
+    };
+
   const [chartMode, setChartMode] = useState<"sales" | "transactions">("sales");
   const [growthMode, setGrowthMode] = useState<"growth" | "transactions">("growth");
+
+  const [selectedSaleEmployeeItem, setSelectedSaleEmployeeItem] = useState<EmployeeTableDetailItem | null>(null);
+  const [isSaleEmployeeDrawerOpen, setIsSaleEmployeeDrawerOpen] = useState<boolean>(false);
+
+  // Safe accessor mappings or fallbacks based on store metrics
+  const totalSalesVal = metrics?.totalSales ?? 0;
+  const totalTransactionsVal = metrics?.totalTransactions ?? 0;
+  const averageOrderValueVal = metrics?.averageOrderValue ?? 0;
+  const itemsSoldVal = metrics?.itemsSold ?? 0;
+  const totalRefundsVal = metrics?.totalRefunds ?? 0;
+
+  // Safe dataset helpers to prevent null/undefined issues on Recharts and iteration
+  const safeBarChartData = barChartData ?? [];
+  const safeDonutChartData = donutChartData ?? [];
+  const safeTopListByGrowth = topListByGrowth ?? [];
+  const safeTableDetails = tableDetails ?? [];
+
+  const effectiveBarData = (safeBarChartData.length > 0 ? safeBarChartData : safeTableDetails).slice(0, 7);
+  const effectiveDonutData = safeDonutChartData.length > 0 ? safeDonutChartData : safeTableDetails;
+  const effectiveGrowthData = safeTopListByGrowth.length > 0 ? safeTopListByGrowth : safeTableDetails;
 
   return (
     <div className="space-y-6 p-6 bg-slate-50/50 min-h-screen">
@@ -37,17 +110,6 @@ export default function SalesByEmployeeView() {
             Track sales performance of employees across all shops.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" className="gap-2 border-slate-200 text-slate-700 bg-white shadow-xs">
-            <Download className="h-4 w-4" /> Export Report
-          </Button>
-          <Button variant="outline" className="gap-2 border-slate-200 text-slate-700 bg-white shadow-xs">
-            <Calendar className="h-4 w-4" /> Schedule Report
-          </Button>
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-xs">
-            <Filter className="h-4 w-4" /> Filters
-          </Button>
-        </div>
       </div>
 
       {/* 2. Top Metric Summary Cards */}
@@ -56,9 +118,18 @@ export default function SalesByEmployeeView() {
           <CardContent className="p-4 flex items-center justify-between">
             <div className="space-y-1">
               <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Sales</p>
-              <h3 className="text-2xl font-bold text-slate-900"><CurrencyFormatter amount={124680} /></h3>
-              <p className="text-xs text-emerald-600 font-medium flex items-center gap-1">
-                <ArrowUpRight className="h-3 w-3" /> +12.5% vs May 1 - May 27
+              {isLoading ? (
+                <div className="py-1">
+                  <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+                </div>
+              ) : (
+                <h3 className="text-2xl font-bold text-slate-900">
+                  <CurrencyFormatter amount={typeof totalSalesVal === "number" ? totalSalesVal : (totalSalesVal?.current ?? 0)} />
+                </h3>
+              )}
+              <p className={`text-xs font-medium flex items-center gap-1 ${(typeof totalSalesVal === "object" && totalSalesVal !== null ? totalSalesVal.percentageChange : 12.5) >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                {(typeof totalSalesVal === "object" && totalSalesVal !== null ? totalSalesVal.percentageChange : 12.5) >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />} 
+                {Math.abs(typeof totalSalesVal === "object" && totalSalesVal !== null ? totalSalesVal.percentageChange : 12.5).toFixed(1)}% vs previous period
               </p>
             </div>
             <div className="h-10 w-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
@@ -71,9 +142,17 @@ export default function SalesByEmployeeView() {
           <CardContent className="p-4 flex items-center justify-between">
             <div className="space-y-1">
               <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Transactions</p>
-              <h3 className="text-2xl font-bold text-slate-900">1,248</h3>
-              <p className="text-xs text-emerald-600 font-medium flex items-center gap-1">
-                <ArrowUpRight className="h-3 w-3" /> +8.2% vs May 1 - May 27
+              {isLoading ? (
+                <div className="py-1">
+                  <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+                </div>
+              ) : (
+                <h3 className="text-2xl font-bold text-slate-900">
+                  {typeof totalTransactionsVal === "number" ? totalTransactionsVal.toLocaleString() : ((totalTransactionsVal?.current ?? 0).toLocaleString())}
+                </h3>
+              )}
+              <p className="text-xs text-slate-500 font-medium flex items-center gap-1">
+                Completed orders count
               </p>
             </div>
             <div className="h-10 w-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
@@ -86,10 +165,16 @@ export default function SalesByEmployeeView() {
           <CardContent className="p-4 flex items-center justify-between">
             <div className="space-y-1">
               <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Average Order Value</p>
-              <h3 className="text-2xl font-bold text-slate-900"><CurrencyFormatter amount={19.78} /></h3>
-              <p className="text-xs text-emerald-600 font-medium flex items-center gap-1">
-                <ArrowUpRight className="h-3 w-3" /> +5.6% vs May 1 - May 27
-              </p>
+              {isLoading ? (
+                <div className="py-1">
+                  <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+                </div>
+              ) : (
+                <h3 className="text-2xl font-bold text-slate-900">
+                  <CurrencyFormatter amount={typeof averageOrderValueVal === "number" ? averageOrderValueVal : (averageOrderValueVal?.current ?? 0)} />
+                </h3>
+              )}
+              <p className="text-xs text-slate-500 font-medium">Per transaction</p>
             </div>
             <div className="h-10 w-10 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
               <BarChart3 className="h-5 w-5" />
@@ -101,10 +186,16 @@ export default function SalesByEmployeeView() {
           <CardContent className="p-4 flex items-center justify-between">
             <div className="space-y-1">
               <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Items Sold</p>
-              <h3 className="text-2xl font-bold text-slate-900">3,486</h3>
-              <p className="text-xs text-emerald-600 font-medium flex items-center gap-1">
-                <ArrowUpRight className="h-3 w-3" /> +10.4% vs May 1 - May 27
-              </p>
+              {isLoading ? (
+                <div className="py-1">
+                  <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+                </div>
+              ) : (
+                <h3 className="text-2xl font-bold text-slate-900">
+                  {typeof itemsSoldVal === "number" ? itemsSoldVal.toLocaleString() : ((itemsSoldVal?.current ?? 0).toLocaleString())}
+                </h3>
+              )}
+              <p className="text-xs text-slate-500 font-medium">Total units moved</p>
             </div>
             <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
               <ShoppingBag className="h-5 w-5" />
@@ -116,10 +207,16 @@ export default function SalesByEmployeeView() {
           <CardContent className="p-4 flex items-center justify-between">
             <div className="space-y-1">
               <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Refunds</p>
-              <h3 className="text-2xl font-bold text-slate-900"><CurrencyFormatter amount={320.00} /></h3>
-              <p className="text-xs text-rose-600 font-medium flex items-center gap-1">
-                -2.4% vs May 1 - May 27
-              </p>
+              {isLoading ? (
+                <div className="py-1">
+                  <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+                </div>
+              ) : (
+                <h3 className="text-2xl font-bold text-slate-900">
+                  <CurrencyFormatter amount={typeof totalRefundsVal === "number" ? totalRefundsVal : (totalRefundsVal?.current ?? 0)} />
+                </h3>
+              )}
+              <p className="text-xs text-rose-600 font-medium">Returned amount</p>
             </div>
             <div className="h-10 w-10 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600">
               <RefreshCcw className="h-5 w-5" />
@@ -130,49 +227,138 @@ export default function SalesByEmployeeView() {
 
       {/* 3. Filter Toolbar Section */}
       <Card className="border-slate-200/80 shadow-xs rounded-xl bg-white p-4">
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-3 items-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3 items-center">
+          
+          {/* Date Range Inputs */}
           <div>
             <label className="text-xs font-medium text-slate-500 block mb-1">Date Range</label>
-            <div className="text-sm font-medium border border-slate-200 rounded-lg p-2 bg-white flex items-center justify-between text-slate-700">
-              <span className="truncate">{dateRange}</span>
-              <Calendar className="h-4 w-4 text-slate-400 shrink-0 ml-1" />
+            <div className="text-sm font-medium border border-slate-200 rounded-xl px-2 py-1 bg-white flex items-center gap-1.5 text-slate-700 shadow-xs">
+              <Input 
+                type="date" 
+                value={dateRange?.start ? dateRange.start.split('T')[0] : ""}
+                onChange={(e) => {
+                  setDateRange({ ...dateRange, start: e.target.value });
+                  setSelectedFilter("custom");
+                }}
+                className="bg-transparent text-[11px] h-8 px-1 border-0 shadow-none outline-none focus-visible:ring-0 text-slate-700 cursor-pointer w-full"
+              />
+              <span className="text-slate-400 font-normal shrink-0">-</span>
+              <Input 
+                type="date" 
+                value={dateRange?.end ? dateRange.end.split('T')[0] : ""}
+                onChange={(e) => {
+                  setDateRange({ ...dateRange, end: e.target.value });
+                  setSelectedFilter("custom");
+                }}
+                className="bg-transparent text-[11px] h-8 px-1 border-0 shadow-none outline-none focus-visible:ring-0 text-slate-700 cursor-pointer w-full"
+              />
             </div>
           </div>
+
+          {/* Compare With Dropdown */}
           <div>
             <label className="text-xs font-medium text-slate-500 block mb-1">Compare With</label>
-            <div className="text-sm font-medium border border-slate-200 rounded-lg p-2 bg-white flex items-center justify-between text-slate-700">
-              <span className="truncate">Apr 1, 2026 - Apr 27, 2026</span>
-              <Calendar className="h-4 w-4 text-slate-400 shrink-0 ml-1" />
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-full h-10 text-xs rounded-xl border-slate-200 justify-between font-semibold bg-white shadow-xs text-slate-700">
+                  <span className="truncate">{compareWithPrevious ? "Previous Period" : "None"}</span>
+                  <Calendar className="w-4 h-4 text-slate-400 shrink-0 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="rounded-xl w-44">
+                <DropdownMenuItem onClick={() => setCompareWithPrevious(true)} className="text-xs font-semibold cursor-pointer">
+                  Previous Period
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setCompareWithPrevious(false)} className="text-xs font-semibold cursor-pointer">
+                  None
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
+
+          {/* Filter Preset Dropdown */}
+          <div>
+            <label className="text-xs font-medium text-slate-500 block mb-1">Filter Preset</label>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-full h-10 text-xs rounded-xl border-slate-200 justify-between font-semibold bg-white shadow-xs text-slate-700">
+                  <span className="truncate">
+                    {selectedFilter === "daily" ? "Daily" :
+                    selectedFilter === "current_week" ? "Current Week" :
+                    selectedFilter === "current_month" ? "Current Month" :
+                    selectedFilter === "last_month" ? "Last Month" :
+                    selectedFilter === "custom" ? "Custom" : "Select Preset"}
+                  </span>
+                  <ChevronDown className="w-3 h-3 text-slate-400 shrink-0 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="rounded-xl w-44">
+                <DropdownMenuItem onClick={() => setSelectedFilter("daily")} className="text-xs font-semibold cursor-pointer">Daily</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSelectedFilter("current_week")} className="text-xs font-semibold cursor-pointer">Current Week</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSelectedFilter("current_month")} className="text-xs font-semibold cursor-pointer">Current Month</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSelectedFilter("last_month")} className="text-xs font-semibold cursor-pointer">Last Month</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSelectedFilter("custom")} className="text-xs font-semibold cursor-pointer">Custom</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Group By Dropdown */}
           <div>
             <label className="text-xs font-medium text-slate-500 block mb-1">Group By</label>
-            <select className="text-sm font-medium border border-slate-200 rounded-lg p-2 bg-white w-full text-slate-700 outline-none">
-              <option>Employee</option>
-              <option>Daily</option>
-              <option>Shop</option>
-            </select>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-full h-10 text-xs rounded-xl border-slate-200 justify-between font-semibold bg-white shadow-xs text-slate-700">
+                  <span className="truncate">{selectedGroupBy}</span>
+                  <ChevronDown className="w-3 h-3 text-slate-400 shrink-0 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="rounded-xl w-44">
+                <DropdownMenuItem onClick={() => setSelectedGroupBy("Employee")} className="text-xs font-semibold cursor-pointer">Employee</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSelectedGroupBy("None")} className="text-xs font-semibold cursor-pointer">None</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSelectedGroupBy("Daily")} className="text-xs font-semibold cursor-pointer">Daily</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSelectedGroupBy("Shop")} className="text-xs font-semibold cursor-pointer">Shop</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
+
+          {/* Shop Dropdown */}
           <div>
             <label className="text-xs font-medium text-slate-500 block mb-1">Shop</label>
-            <select className="text-sm font-medium border border-slate-200 rounded-lg p-2 bg-white w-full text-slate-700 outline-none">
-              <option>All Shops</option>
-              <option>Accra Mall Branch</option>
-              <option>West Hills Branch</option>
-            </select>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="w-full h-10 text-xs rounded-xl border-slate-200 gap-2 font-semibold bg-white shadow-xs justify-between">
+                  <span className="flex items-center gap-2 truncate">
+                    <Store className="w-4 h-4 text-indigo-600 shrink-0" />
+                    <span className="truncate">{selectedShop === "all" ? "All Outlets" : shops.find(s => s.id === selectedShop)?.name || "Select Shop"}</span>
+                  </span>
+                  <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="rounded-xl">
+                <DropdownMenuItem onClick={() => setSelectedShop("all")} className="text-xs font-semibold cursor-pointer">
+                  All Outlets
+                </DropdownMenuItem>
+                {shops.map((shop) => (
+                  <DropdownMenuItem key={shop.id} onClick={() => setSelectedShop(shop.id)} className="text-xs font-semibold cursor-pointer">
+                    {shop.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
+
+          {/* Reset Action */}
           <div>
             <label className="text-xs font-medium text-slate-500 block mb-1">&nbsp;</label>
-            <Button variant="outline" className="w-full border-slate-200 text-slate-700 shadow-xs">
-              <Filter className="h-4 w-4 mr-2" /> More Filters
-            </Button>
+            <CustomButton
+              className="w-full"
+               onClick={handleResetFilters}
+               text="Reset Filters"
+               customVariant="primary"
+               icon={<RotateCcw className="h-3.5 w-3.5 mr-1.5" />}
+             />
           </div>
-          <div>
-            <label className="text-xs font-medium text-slate-500 block mb-1">&nbsp;</label>
-            <Button variant="ghost" className="w-full text-slate-600 hover:bg-slate-100">
-              <RotateCcw className="h-4 w-4 mr-2" /> Reset
-            </Button>
-          </div>
+
         </div>
       </Card>
 
@@ -199,18 +385,22 @@ export default function SalesByEmployeeView() {
             </div>
           </CardHeader>
           <CardContent className="space-y-3 pt-2">
-            {salesByEmployeeData.map((emp, i) => {
+            {effectiveBarData.map((emp, i) => {
               const maxVal = 30000;
-              const currentVal = chartMode === "sales" ? emp.value : emp.transactions * 100; // proportional scale
+              const empValue = Number(emp.totalSales ?? 0);
+              const empTransactions = Number("transactions" in emp ? emp.transactions : 0);
+              const empName = "name" in emp && typeof emp.name === "string" ? emp.name : ("label" in emp && typeof emp.label === "string" ? emp.label : "Unknown");
+
+              const currentVal = chartMode === "sales" ? empValue : empTransactions * 100;
               const percentageWidth = Math.min(Math.round((currentVal / maxVal) * 100), 100);
 
               return (
                 <div key={i} className="flex items-center justify-between gap-4 text-xs">
                   <div className="w-32 flex items-center gap-2 shrink-0">
                     <div className="h-7 w-7 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-700 text-[10px] shrink-0">
-                      {emp.name.split(' ').map(n => n[0]).join('')}
+                      {empName.split(' ').map((n: string) => n[0]).join('')}
                     </div>
-                    <span className="font-medium text-slate-800 truncate">{emp.name}</span>
+                    <span className="font-medium text-slate-800 truncate">{empName}</span>
                   </div>
                   
                   <div className="flex-1 bg-slate-100 rounded-full h-3 overflow-hidden">
@@ -221,20 +411,11 @@ export default function SalesByEmployeeView() {
                   </div>
 
                   <div className="w-24 text-right font-bold text-slate-900 shrink-0">
-                    {chartMode === "sales" ? <CurrencyFormatter amount={emp.value} /> : `${emp.transactions} trans`}
+                    {chartMode === "sales" ? <CurrencyFormatter amount={empValue} /> : `${empTransactions} trans`}
                   </div>
                 </div>
               );
             })}
-            <div className="flex justify-between text-[10px] text-slate-400 pt-2 border-t border-slate-100 px-32">
-              <span>0</span>
-              <span>₵5K</span>
-              <span>₵10K</span>
-              <span>₵15K</span>
-              <span>₵20K</span>
-              <span>₵25K</span>
-              <span>₵30K</span>
-            </div>
           </CardContent>
           <div className="p-4 border-t border-slate-100">
             <button className="text-xs font-semibold text-blue-600 hover:underline flex items-center gap-1">
@@ -249,10 +430,10 @@ export default function SalesByEmployeeView() {
             <CardTitle className="text-base font-bold text-slate-900">Top Employees by Sales Growth</CardTitle>
             <select 
               value={growthMode}
-              onChange={(e) => setGrowthMode(e.target.value as any)}
+              onChange={(e) => setGrowthMode(e.target.value as "growth" | "transactions")}
               className="text-xs border border-slate-200 rounded-md px-2.5 py-1.5 bg-white text-slate-600 outline-none"
             >
-              <option value="growth">Growth (vs Apr 1 - Apr 27)</option>
+              <option value="growth">Growth</option>
               <option value="transactions">By Transactions</option>
             </select>
           </CardHeader>
@@ -264,16 +445,16 @@ export default function SalesByEmployeeView() {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={salesByEmployeeData}
+                      data={effectiveDonutData}
                       cx="50%"
                       cy="50%"
                       innerRadius={55}
                       outerRadius={75}
                       paddingAngle={3}
-                      dataKey="value"
+                      dataKey="totalSales"
                     >
-                      {salesByEmployeeData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      {effectiveDonutData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={["#2563eb", "#10b981", "#f59e0b", "#8b5cf6", "#06b6d4", "#ec4899"][index % 6]} />
                       ))}
                     </Pie>
                   </PieChart>
@@ -286,25 +467,24 @@ export default function SalesByEmployeeView() {
 
               {/* Growth Legend List */}
               <div className="md:col-span-7 space-y-2">
-                {[
-                  { name: "Ama Serwaa", growth: "+24.6%", color: "#8b5cf6" },
-                  { name: "Kofi Boateng", growth: "+18.3%", color: "#06b6d4" },
-                  { name: "Michael Brown", growth: "+14.2%", color: "#2563eb" },
-                  { name: "Sarah Johnson", growth: "+11.8%", color: "#10b981" },
-                  { name: "Kwame Mensah", growth: "+9.6%", color: "#f59e0b" },
-                  { name: "Emely Davis", growth: "+6.7%", color: "#ec4899" },
-                  { name: "David Wilson", growth: "+3.2%", color: "#94a3b8" },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-                      <span className="text-slate-700 font-medium truncate max-w-[110px]">{item.name}</span>
+                {effectiveGrowthData.slice(0, 7).map((item, i) => {
+                  const growthVal = Number("salesGrowth" in item ? item.salesGrowth : 0);
+                  const isPos = growthVal >= 0;
+                  const itemName = "name" in item && typeof item.name === "string" ? item.name : ("label" in item && typeof item.label === "string" ? item.label : "Unknown");
+                  const colors = ["#8b5cf6", "#06b6d4", "#2563eb", "#10b981", "#f59e0b", "#ec4899", "#94a3b8"];
+                  
+                  return (
+                    <div key={i} className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: colors[i % colors.length] }} />
+                        <span className="text-slate-700 font-medium truncate max-w-[110px]">{itemName}</span>
+                      </div>
+                      <span className={`${isPos ? "text-emerald-600" : "text-rose-600"} font-semibold flex items-center gap-0.5`}>
+                        <ArrowUpRight className="h-3 w-3" /> {isPos ? `+${growthVal.toFixed(1)}%` : `${growthVal.toFixed(1)}%`}
+                      </span>
                     </div>
-                    <span className="text-emerald-600 font-semibold flex items-center gap-0.5">
-                      <ArrowUpRight className="h-3 w-3" /> {item.growth}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
             </div>
@@ -324,76 +504,38 @@ export default function SalesByEmployeeView() {
           <CardTitle className="text-base font-bold text-slate-900">Employee Sales Performance</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider border-y border-slate-100">
-                <tr>
-                  <th className="py-3 px-4">Employee</th>
-                  <th className="py-3 px-4">Total Sales</th>
-                  <th className="py-3 px-4">Transactions</th>
-                  <th className="py-3 px-4">Avg Order Value</th>
-                  <th className="py-3 px-4">Items Sold</th>
-                  <th className="py-3 px-4">Discounts</th>
-                  <th className="py-3 px-4">Refunds</th>
-                  <th className="py-3 px-4">Sales Growth</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
-                {salesByEmployeeData.map((emp, i) => (
-                  <tr key={i} className="hover:bg-slate-50/50">
-                    <td className="py-3 px-4 flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-700 text-xs shrink-0">
-                        {emp.name.split(' ').map(n => n[0]).join('')}
-                      </div>
-                      <div>
-                        <span className="font-semibold text-slate-900 block">{emp.name}</span>
-                        <span className="text-[11px] text-slate-400 font-normal">{emp.branch}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 font-bold text-slate-900"><CurrencyFormatter amount={emp.value} /></td>
-                    <td className="py-3 px-4">{emp.transactions}</td>
-                    <td className="py-3 px-4"><CurrencyFormatter amount={emp.aov} /></td>
-                    <td className="py-3 px-4">{emp.itemsSold}</td>
-                    <td className="py-3 px-4"><CurrencyFormatter amount={emp.discounts} /></td>
-                    <td className="py-3 px-4"><CurrencyFormatter amount={emp.refunds} /></td>
-                    <td className="py-3 px-4 text-emerald-600 font-semibold flex items-center gap-0.5 pt-4">
-                      <ArrowUpRight className="h-3 w-3" /> {emp.growth}
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <Button variant="outline" size="icon" className="h-7 w-7 border-slate-200 text-slate-600 hover:bg-slate-100">
-                        <BarChart3 className="h-3.5 w-3.5" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Table Pagination Footer */}
-          <div className="flex items-center justify-between p-4 border-t border-slate-100 text-xs text-slate-500">
-            <span>Showing 1 to 7 of 7 employees</span>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1">
-                <Button variant="outline" size="icon" className="h-7 w-7 border-slate-200 text-slate-400" disabled>
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button variant="default" size="sm" className="h-7 w-7 bg-blue-600 text-white font-semibold">
-                  1
-                </Button>
-                <Button variant="outline" size="icon" className="h-7 w-7 border-slate-200 text-slate-400" disabled>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-              <select className="border border-slate-200 rounded-md px-2 py-1 bg-white text-slate-600 outline-none ml-2">
-                <option>10 / page</option>
-                <option>20 / page</option>
-              </select>
-            </div>
+           <div className="w-full overflow-x-auto">
+            <TableMain
+              columns={employeeSalesColumns}
+              data={tableDetails || []}
+              loading={isLoading}
+              columnVisibilityFilter={true}
+              tableExportButtonVisible={true}
+              tableFilterButtonVisible={true}
+              placeholder="Search keyword"            
+              searchKey="name"
+              meta={{
+               onViewEmployeeAnalytics(employee) {
+                   setSelectedSaleEmployeeItem(employee);
+                   setIsSaleEmployeeDrawerOpen(true);
+               },
+              } as EmployeeSalesTableMeta}
+            />
           </div>
         </CardContent>
       </Card>
+
+      <AppSheet
+        isOpen={isSaleEmployeeDrawerOpen}
+        onClose={() => setIsSaleEmployeeDrawerOpen(false)}
+        title="Sales by Employee Performance"
+        description="View individual sales metrics, total revenue generated, transaction volume, average order value, and target progress for this employee."
+        maxWidth="lg"
+      >
+        {selectedSaleEmployeeItem && (
+          <EmployeeDetailsDrawer employee={selectedSaleEmployeeItem} />
+        )}  
+      </AppSheet>
 
     </div>
   );
