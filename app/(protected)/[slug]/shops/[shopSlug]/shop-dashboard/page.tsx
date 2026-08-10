@@ -14,10 +14,8 @@ import {
   MapPin, 
   Phone, 
   Mail, 
-  Calendar,
   ChevronDown,
   Sparkles,
-  Loader2,
   MoreHorizontal,
   ArrowUpDown,
   SlidersHorizontal
@@ -112,7 +110,7 @@ export default function ShopDashboard() {
   
   const [selectedFilter, setSelectedFilter] = React.useState<DateFilterPreset>("daily");
   const [startDate, setCustomStartDate] = React.useState<string | Date | undefined>(undefined);
-const [endDate, setCustomEndDate] = React.useState<string | Date | undefined>(undefined);
+  const [endDate, setCustomEndDate] = React.useState<string | Date | undefined>(undefined);
 
   useEffect(() => {
     if (!hasAccess(user, "dashboard")) {
