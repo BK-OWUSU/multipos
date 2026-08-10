@@ -35,7 +35,7 @@ export default function SalesSummaryView() {
   const { shops, fetchShops } = useShopStore();
 
   // Local state for filter controls
-  const [selectedFilter, setSelectedFilter] = useState<"" | "daily" | "current_week" | "current_month" | "last_month" | "custom">("current_month");
+  const [selectedFilter, setSelectedFilter] = useState<"" | "daily" | "current_week" | "last_week" | "current_month" | "last_month" | "custom">("current_month");
   const [compareWithPrevious, setCompareWithPrevious] = useState<boolean>(true);
   const [selectedShop, setSelectedShop] = useState<string>("all");
   

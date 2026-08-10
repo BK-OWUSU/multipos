@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useForm, FormProvider } from "react-hook-form";
+import { useForm, FormProvider, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -25,7 +25,6 @@ export default function AddNewShopPage() {
   const params = useParams();
   const router = useRouter();
   const businessSlug = params?.slug as string;
-  const [computedSlug, setComputedSlug] = useState("");
 
   const methods = useForm<CreateShopInput>({
     resolver: zodResolver(createShopSchema),
@@ -46,22 +45,29 @@ export default function AddNewShopPage() {
 
   const { formState: {isSubmitting}} = methods;
 
-  const watchName = methods.watch("name");
-  const watchAddress = methods.watch("address");
-  const watchPhone = methods.watch("phone");
-  const watchOpeningTime = methods.watch("openingTime");
-  const watchClosingTime = methods.watch("closingTime");
+// Single useWatch call passing an array of fields
+  const [,
+    watchAddress = "",
+    watchPhone = "",
+    watchOpeningTime = "",
+    watchClosingTime = ""
+  ] = useWatch({
+    control: methods.control,
+    name: ["address", "phone", "openingTime", "closingTime"]
+  });
 
-  // Auto-generate slug from name input
-  useEffect(() => {
-    const slug = (watchName || "")
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, "-")
-      .replace(/[^\w\-]+/g, "")
-      .replace(/\-\-+/g, "-");
-    setComputedSlug(slug);
-  }, [watchName]);
+const [watchName = ""] = useWatch({
+    control: methods.control,
+    name: ["name"]
+  });
+
+  // Derive the slug directly during render—no useEffect or extra state needed!
+  const computedSlug = (watchName || "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^\w\-]+/g, "")
+    .replace(/\-\-+/g, "-");
 
   const onSubmit = async (data: CreateShopInput) => {
     console.log(data);
@@ -70,7 +76,7 @@ export default function AddNewShopPage() {
         loading: "Creating new shop branch...",
         success: (res) => {
           if (res.success) {
-            router.push(`/${businessSlug}/shops`)
+            router.push(`/${businessSlug}/shops/view-shops`)
             return res.message || "Shop creation successful";
           } else {
             throw new Error(res.error || "Shop creation failed");

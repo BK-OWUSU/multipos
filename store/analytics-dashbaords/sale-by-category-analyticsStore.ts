@@ -1,20 +1,19 @@
 import { create } from "zustand";
 import apiClient from "@/lib/api-client";
-import { SalesSummaryData, SalesMetrics } from "@/types/types/sales-summary-analytics.types";
+import { CategorySalesSummaryData, CategorySummaryMetrics } from "@/types/types/sale-by-category-analytics.type";
 
-type SalesSummaryStore = {
+type CategorySalesSummaryStore = {
   // States
-  dateRange: SalesSummaryData["dateRange"] | null;
-  metrics: SalesMetrics | null;
-  salesByShop: SalesSummaryData["salesByShop"] | null;
-  salesOverTimeChart: SalesSummaryData["salesOverTimeChart"] | null;
-  historicalPeriods: SalesSummaryData["historicalPeriods"] | null;
-  salesHighlights: SalesSummaryData["salesHighlights"] | null;
+  dateRange: CategorySalesSummaryData["dateRange"] | null;
+  metrics: CategorySummaryMetrics | null;
+  donutChartData: CategorySalesSummaryData["donutChartData"] | null;
+  topCategoriesByGrowth: CategorySalesSummaryData["topCategoriesByGrowth"] | null;
+  categoryTableDetails: CategorySalesSummaryData["categoryTableDetails"] | null;
   isLoading: boolean;
   error: string | null;
 
   // Actions
-  fetchSalesSummary: (filters?: {
+  fetchCategorySalesSummary: (filters?: {
     shopId?: string;
     filter?: "" | "daily" | "current_week" | "last_week" | "current_month" | "last_month" | "custom";
     startDate?: string;
@@ -23,19 +22,18 @@ type SalesSummaryStore = {
   }) => Promise<void>;
 };
 
-export const useSalesSummaryStore = create<SalesSummaryStore>((set) => ({
+export const useCategorySalesSummaryStore = create<CategorySalesSummaryStore>((set) => ({
   // Initial States
   dateRange: null,
   metrics: null,
-  salesByShop: null,
-  salesOverTimeChart: null,
-  historicalPeriods: null,
-  salesHighlights: null,
+  donutChartData: null,
+  topCategoriesByGrowth: null,
+  categoryTableDetails: null,
   isLoading: false,
   error: null,
 
-  // Fetch Sales Summary Analytics
-  fetchSalesSummary: async (filters) => {
+  // Fetch Category Sales Analytics Summary
+  fetchCategorySalesSummary: async (filters) => {
     set({ isLoading: true, error: null });
     try {
       const params = new URLSearchParams();
@@ -48,21 +46,21 @@ export const useSalesSummaryStore = create<SalesSummaryStore>((set) => ({
       }
 
       const queryString = params.toString();
-      const endpoint = queryString ? `/business/analytics/sales-summary?${queryString}` : `/business/analytics/sales-summary`;
+      const endpoint = queryString ? `/business/analytics/sales-category?${queryString}` : `/business/analytics/sales-category`;
 
       const response = await apiClient.get(endpoint);
-      const data = response.data.data as SalesSummaryData;
+      const data = response.data.data as CategorySalesSummaryData;
 
       // Map raw flat backend numbers to the UI-expected nested structure
-      const rawMetrics = data.metrics;
-      const formattedMetrics: SalesMetrics | null = rawMetrics ? {
+      const rawMetrics = data.summaryMetrics;
+      const formattedMetrics: CategorySummaryMetrics | null = rawMetrics ? {
         totalSales: {
           current: rawMetrics.totalSales,
           percentageChange: rawMetrics.salesGrowthPercentage ?? 0,
         },
         totalTransactions: {
           current: rawMetrics.totalTransactions,
-          percentageChange: 0, // Fallback if property doesn't exist on backend
+          percentageChange: 0,
         },
         averageOrderValue: {
           current: rawMetrics.averageOrderValue,
@@ -81,23 +79,21 @@ export const useSalesSummaryStore = create<SalesSummaryStore>((set) => ({
       set({
         dateRange: data.dateRange,
         metrics: formattedMetrics,
-        salesByShop: data.salesByShop,
-        salesOverTimeChart: data.salesOverTimeChart,
-        historicalPeriods: data.historicalPeriods,
-        salesHighlights: data.salesHighlights,
+        donutChartData: data.donutChartData,
+        topCategoriesByGrowth: data.topCategoriesByGrowth,
+        categoryTableDetails: data.categoryTableDetails,
         isLoading: false,
       });
     } catch (error: unknown) {
-      console.error("Error fetching sales summary analytics:", error);
+      console.error("Error fetching category sales summary analytics:", error);
       set({
         dateRange: null,
         metrics: null,
-        salesByShop: null,
-        salesOverTimeChart: null,
-        historicalPeriods: null,
-        salesHighlights: null,
+        donutChartData: null,
+        topCategoriesByGrowth: null,
+        categoryTableDetails: null,
         isLoading: false,
-        error: (error as Error).message || "Failed to fetch sales summary analytics records.",
+        error: (error as Error).message || "Failed to fetch category sales summary analytics records.",
       });
     }
   },

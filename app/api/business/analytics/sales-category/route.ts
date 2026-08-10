@@ -1,7 +1,7 @@
 import { getSession } from "@/lib/auths-functions";
 import { NextRequest, NextResponse } from "next/server";
 import { parseISO } from "date-fns";
-import { DateFilterPreset, SalesAnalyticsService } from "@/lib/services/analytics_dashboards/sales-summary-analytics";
+import { CategorySalesAnalyticsService, DateFilterPreset } from "@/lib/services/analytics_dashboards/sales-by-category-analytics";
 
 export async function GET(request: NextRequest) {
     try {
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
         }
 
         const filterParam = searchParams.get("filter");
-        const validFilters: DateFilterPreset[] = ["daily", "current_week", "current_month", "last_month", "custom"];
+        const validFilters: DateFilterPreset[] = ["daily", "current_week", "last_week", "current_month", "last_month", "custom"];
         const filter = validFilters.includes(filterParam as DateFilterPreset) ? (filterParam as DateFilterPreset) : "current_month";
 
         // 2. Parse custom dates only if they are passed
@@ -37,8 +37,8 @@ export async function GET(request: NextRequest) {
         const compareWithPreviousParam = searchParams.get("compareWithPrevious");
         const compareWithPrevious = compareWithPreviousParam !== null ? compareWithPreviousParam === "true" : true;
 
-        // 4. Fetch comprehensive sales performance report using the analytics service method
-        const salesSummaryData = await SalesAnalyticsService.getSalesSummaryReport({
+        // 4. Fetch comprehensive category sales analytics report using the service method
+        const categorySalesData = await CategorySalesAnalyticsService.getCategorySalesAnalyticsReport({
             businessId,
             shopId: shopId || undefined,
             filter,
@@ -50,18 +50,18 @@ export async function GET(request: NextRequest) {
         return NextResponse.json(
             {
                 success: true,
-                message: "Sales analytics summary report retrieved successfully.",
-                data: salesSummaryData,
+                message: "Category sales analytics report retrieved successfully.",
+                data: categorySalesData,
             },
             { status: 200 }
         );
 
     } catch (error: unknown) {
-        console.error("API_FETCH_SALES_SUMMARY_ERROR:", error);
+        console.error("API_FETCH_CATEGORY_SALES_ERROR:", error);
         return NextResponse.json(
             {
                 success: false,
-                error: (error as Error).message || "An unexpected error occurred while fetching sales summary records.",
+                error: (error as Error).message || "An unexpected error occurred while fetching category sales records.",
             },
             { status: 500 }
         );

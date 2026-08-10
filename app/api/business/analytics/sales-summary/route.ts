@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
         }
 
         const filterParam = searchParams.get("filter");
-        const validFilters: DateFilterPreset[] = ["daily", "current_week", "current_month", "last_month", "custom"];
+        const validFilters: DateFilterPreset[] = ["daily", "current_week", "last_week","current_month", "last_month", "custom"];
         const filter = validFilters.includes(filterParam as DateFilterPreset) ? (filterParam as DateFilterPreset) : "current_month";
 
         // 2. Parse custom dates only if they are passed

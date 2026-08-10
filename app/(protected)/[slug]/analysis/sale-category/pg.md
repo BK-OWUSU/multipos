@@ -33,7 +33,8 @@ export default function SalesByCategoryView() {
     topCategoriesByGrowth, 
     categoryTableDetails, 
     donutChartData, 
-    metrics
+    metrics,
+    dateRange: storeDateRange 
   } = useCategorySalesSummaryStore();
   
   const { shops, fetchShops } = useShopStore();
@@ -46,7 +47,6 @@ export default function SalesByCategoryView() {
     start: format(startOfMonth(new Date()), "yyyy-MM-dd"),
     end: format(new Date(), "yyyy-MM-dd")
   });
-
   const [compareWithPrevious, setCompareWithPrevious] = useState<boolean>(true);
 
   // UI Interactive States

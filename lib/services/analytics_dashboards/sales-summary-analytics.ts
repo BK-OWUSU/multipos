@@ -9,6 +9,7 @@ import {
   endOfMonth, 
   subMonths, 
   subDays,
+  subWeeks,
   differenceInDays,
   format
 } from "date-fns";
@@ -16,6 +17,7 @@ import {
 export type DateFilterPreset = 
   | "daily" 
   | "current_week" 
+  | "last_week"
   | "current_month" 
   | "last_month" 
   | "custom";
@@ -51,6 +53,12 @@ export class SalesAnalyticsService {
       case "current_week":
         start = startOfWeek(now, { weekStartsOn: 1 });
         end = endOfWeek(now, { weekStartsOn: 1 });
+        break;
+
+      case "last_week":
+        const lastWeekDate = subWeeks(now, 1);
+        start = startOfWeek(lastWeekDate, { weekStartsOn: 1 });
+        end = endOfWeek(lastWeekDate, { weekStartsOn: 1 });
         break;
 
       case "current_month":
