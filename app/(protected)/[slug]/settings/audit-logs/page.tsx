@@ -6,9 +6,7 @@ import {
   ShieldAlert, 
   Package, 
   Laptop, 
-  Download, 
   Filter,
-  CalendarIcon
 } from "lucide-react"
 
 import { Card, CardContent } from "@/components/ui/card"

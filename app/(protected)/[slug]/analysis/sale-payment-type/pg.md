@@ -434,13 +434,11 @@ export default function SalesByPaymentMethodView() {
                       innerRadius={60}
                       outerRadius={85}
                       paddingAngle={3}
-                      dataKey={chartMode === "sales" ? "totalSales" : "transactions"}
+                      dataKey={chartMode === "sales" ? "value" : "transactions"}
                     >
-                      {effectiveDonutData.map((entry, index) => {
-                        const colors = ["#2563eb", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899"];
-                        const cellColor = (entry as { color?: string }).color || colors[index % colors.length];
-                        return <Cell key={`cell-${index}`} fill={cellColor} />;
-                      })}
+                      {effectiveDonutData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={(entry as { color?: string }).color || "#2563eb"} />
+                      ))}
                     </Pie>
                   </PieChart>
                 </ResponsiveContainer>

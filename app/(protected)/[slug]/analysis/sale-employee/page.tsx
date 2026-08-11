@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { 
   DollarSign, ShoppingBag, BarChart3, RefreshCcw, 
-  Download, Calendar, RotateCcw, ArrowUpRight, 
+  Calendar, RotateCcw, ArrowUpRight, 
   ArrowRight, ChevronDown, Store, ArrowDownRight, Loader2
 } from "lucide-react";
 import { startOfMonth, format } from "date-fns";
@@ -32,9 +32,9 @@ export default function SalesByEmployeeView() {
     } = useEmployeeSalesSummaryStore();
     const { shops, fetchShops } = useShopStore();
 
-    const [compareWithPrevious, setCompareWithPrevious] = useState<boolean>(true);
-
+    
     // Filter States
+    const [compareWithPrevious, setCompareWithPrevious] = useState<boolean>(true);
     const [selectedShop, setSelectedShop] = useState<string>("all");
     const [selectedFilter, setSelectedFilter] = useState<"daily" | "current_week" | "current_month" | "last_month" | "custom">("current_month");
     const [selectedGroupBy, setSelectedGroupBy] = useState<"Employee" | "Shop" | "Daily" | "None">("None");
@@ -477,7 +477,7 @@ export default function SalesByEmployeeView() {
                     <div key={i} className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2">
                         <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: colors[i % colors.length] }} />
-                        <span className="text-slate-700 font-medium truncate max-w-[110px]">{itemName}</span>
+                        <span className="text-slate-700 font-medium truncate max-w-27.5">{itemName}</span>
                       </div>
                       <span className={`${isPos ? "text-emerald-600" : "text-rose-600"} font-semibold flex items-center gap-0.5`}>
                         <ArrowUpRight className="h-3 w-3" /> {isPos ? `+${growthVal.toFixed(1)}%` : `${growthVal.toFixed(1)}%`}
