@@ -6,7 +6,6 @@ import {
   Search,
   RefreshCw,
   CheckCheck,
-  Settings,
   Package,
   DollarSign,
   ShoppingCart,
@@ -100,6 +99,7 @@ export default function NotificationsCenterPage() {
         {
           loading: "Updating notification...",
           success: (res) => {
+            fetchNotifications();
             return res.message || "Notifications updated successfully";
           },
           error: (err) => err.message || "Error updating notification",
