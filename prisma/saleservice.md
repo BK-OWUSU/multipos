@@ -275,14 +275,9 @@ static async processCheckout(
       } as AppResponse;
     }
 
-    //For cash payment
-    // Fetch the complete sale relation structure to feed directly into the print component
-    const completeSaleData = await SaleService.getSaleById(result.saleId, businessId);
-
     const dataResult = {
       paymentMethod: "CASH",
       saleId: result.saleId,
-      sale: completeSaleData.success ? completeSaleData.sale : null,
     }
 
     return {
@@ -504,6 +499,7 @@ static async verifySalesStatusOnline(reference: string, userId: string) {
 
     // 2. Fallback checking verification payload ping
     const paystackResponse = await paystack.transaction.verify(reference);
+    console.log("PAYSTACK RESPONSE VIA VERIFICATION ENGINE:", paystackResponse);
 
     if (!paystackResponse.status || !paystackResponse.data) {
       return { success: false, error: "Failed to communicate with Paystack lines.", status: 400 };
@@ -580,16 +576,7 @@ static async verifySalesStatusOnline(reference: string, userId: string) {
         }
       });
 
-      // 🟢 FETCH THE FULL SALE RECORD HERE SO THE FRONTEND CAN PRINT IT
-      const completeSaleData = await SaleService.getSaleById(targetSaleId, targetBusinessId);
-
-      return { 
-        success: true, 
-        status: 200, 
-        saleId: targetSaleId, 
-        paymentStatus: "COMPLETED",
-        sale: completeSaleData.success ? completeSaleData.sale : null,
-        message: "Transaction completed." };
+      return { success: true, status: 200, saleId: targetSaleId, paymentStatus: "COMPLETED", message: "Transaction completed." };
     }
 
     // ── CASE B: PAYMENT HAS BEEN ABANDONED OR EXPLICITLY FAILED ──

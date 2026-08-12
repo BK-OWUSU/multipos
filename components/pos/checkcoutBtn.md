@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 
 interface CheckoutButtonProps {
   checkoutPayload: POSCheckoutInput;
-  onSuccess: (saleId: string, saleData?: any) => void;
+  onSuccess: (saleId: string) => void;
   disabled?: boolean;
 }
 
@@ -75,9 +75,7 @@ export default function CheckoutButton({ checkoutPayload, onSuccess, disabled }:
 
       // Handle Instant Cash
       if (explicitPaymentMethod === "CASH") {
-        // Extract the sale object returned by your backend API
-        const cashSaleData = responseData.data?.sale || responseData.sale;
-        onSuccess(verifiedSaleId, cashSaleData);
+        onSuccess(verifiedSaleId);
         setIsProcessing(false);
         return;
       }

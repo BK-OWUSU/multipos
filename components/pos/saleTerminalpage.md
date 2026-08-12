@@ -22,7 +22,6 @@ import { toast } from "sonner";
 import { useDiscountStore } from "@/store/discountStore";
 import { Button } from "@/components/ui/button";
 import { useNotificationStore } from "@/store/notification.store";
-import { ReceiptPrintView } from "@/components/print-component/ReceiptPrintViewComponent";
 
 export interface POSCustomer {
   id: string;
@@ -59,7 +58,6 @@ export default function SaleTerminalPage() {
   const [searchQuery, setSearchQuery] = useState(""); 
   const [sortBy, setSortBy] = useState("name-az"); 
 
-
   // PAYMENT STATES (Added SPLIT support)
   const [paymentMethod, setPaymentMethod] = useState<"CASH" | "MOMO" | "SPLIT">("CASH");
   const [cashPaid, setCashPaid] = useState<number>(0);
@@ -78,9 +76,6 @@ export default function SaleTerminalPage() {
   const selectedProduct = activeProduct || (PRODUCTS && PRODUCTS.length > 0 ? PRODUCTS[0] : null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const customerDropdownRef = useRef<HTMLDivElement>(null);
-
-  // NEW: State to track the completed sale for receipt preview
-  const [completedSale, setCompletedSale] = useState<any>(null);
 
   // LIFECYCLE DISPATCHERS
   useEffect(() => {
@@ -291,14 +286,8 @@ const currentCheckoutPayload = useMemo<POSCheckoutInput>(() => {
   };
 }, [user?.business?.id, user?.currentShop, user?.id, activeSession, selectedCustomer, paymentMethod, cartTotals.total, cashPaid, momoPaid, cart, cartTotals.discountAmount,selectedDiscount]);
 
-  const handleSaleSuccess = (saleId: string, saleData?: any) => {
+  const handleSaleSuccess = (saleId: string) => {
     toast.success(`Transaction processing complete!`);
-
-    // If it's a cash sale and the backend returned the sale entity, trigger receipt popup
-    if (saleData) {
-      setCompletedSale(saleData);
-    }
-
     handleClearCart();
     setCashPaid(0); 
     setMomoPaid(0);
@@ -746,48 +735,6 @@ const currentCheckoutPayload = useMemo<POSCheckoutInput>(() => {
           </span>
         </div>
       </footer>
-
-      {/* ── INSTANT CASH RECEIPT MODAL POPUP ── */}
-      {completedSale && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-4 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center pb-3 border-b border-slate-100 mb-3">
-              <h3 className="text-sm font-bold text-slate-900">Transaction Receipt</h3>
-              <button 
-                onClick={() => setCompletedSale(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            {/* Replace ReceiptPrintView with your actual receipt component path */}
-            <ReceiptPrintView sale={completedSale} onClose={() => setCompletedSale(null)} />
-            <div className="space-y-4 py-2">
-              <p className="text-xs text-slate-500 text-center">Receipt ready for print or download for Sale ID: <span className="font-mono font-bold text-slate-800">{completedSale.id}</span></p>
-              
-              <div className="flex gap-2">
-                <Button 
-                  onClick={() => {
-                    window.print();
-                  }}
-                  className="flex-1 bg-blue-900 hover:bg-blue-800 text-white text-xs font-bold"
-                >
-                  Print Receipt
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={() => setCompletedSale(null)}
-                  className="flex-1 text-xs"
-                >
-                  Close / Next Sale
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      
     </div>
   );
 }
