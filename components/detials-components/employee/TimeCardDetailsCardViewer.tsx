@@ -9,10 +9,8 @@ import {
   CheckCircle2, 
   AlertCircle, 
   Timer,
-  User
 } from "lucide-react";
 
-import { Card } from "@/components/ui/card";
 import { TimeCard, TimeCardStatus } from "@/types/timecards.type";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
@@ -75,7 +73,7 @@ export default function TimeCardDetailsCard({ timeCard }: TimeCardDetailsCardPro
     <div className="space-y-6 pb-6 font-sans">
       
       {/* 1. Header Banner / Title Card */}
-      <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-5 rounded-2xl shadow-lg relative overflow-hidden">
+      <div className="bg-linear-to-br from-slate-900 to-slate-800 text-white p-5 rounded-2xl shadow-lg relative overflow-hidden">
         <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
         
         <div className="flex items-center justify-between mb-3">

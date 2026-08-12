@@ -183,11 +183,16 @@ export function Hero() {
               </Button>
             </motion.div>
 
-            <motion.div variants={fadeUpChild} className="pt-4 flex items-center gap-6 border-t border-slate-800/80">
+           <motion.div variants={fadeUpChild} className="pt-4 flex items-center gap-6 border-t border-slate-800/80">
               <div className="flex -space-x-2">
-                {[1, 2, 3, 4].map((i) => (
+                {[
+                  "/imgs/pos-img-1.png",
+                  "/imgs/pos-img-2.png",
+                  "/imgs/pos-1.png",
+                  "/imgs/pos-img-4.png",
+                ].map((imgSrc, i) => (
                   <div key={i} className="w-10 h-10 rounded-full border-2 border-slate-950 bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-300 overflow-hidden">
-                    <Image src= "/imgs/pos-img-1.png" alt="User" width={40} height={40} className="w-full h-full object-cover" />
+                    <Image src={imgSrc} alt={`User ${i + 1}`} width={40} height={40} className="w-full h-full object-cover" />
                   </div>
                 ))}
               </div>
@@ -202,6 +207,7 @@ export function Hero() {
                 </p>
               </div>
             </motion.div>
+
           </motion.div>
 
           <motion.div 
@@ -421,7 +427,6 @@ export function InteractiveShowcase() {
             <div className="rounded-2xl bg-white border border-slate-200 shadow-xl p-4 relative group">
               <div className="absolute inset-0 bg-blue-600/5 rounded-2xl filter blur-xl group-hover:bg-blue-600/10 transition-colors" />
               <div className="relative rounded-xl overflow-hidden bg-slate-900 aspect-video flex items-center justify-center text-slate-400 font-mono text-sm">
-                [Branch Management Dashboard Mockup]
                 <Image src="/imgs/pos-img-1.png" className="object-fill" fill   sizes="100vw"  alt="Descriptive text" />
               </div>
             </div>
@@ -433,7 +438,7 @@ export function InteractiveShowcase() {
             <div className="rounded-2xl bg-white border border-slate-200 shadow-xl p-4 relative group">
               <div className="absolute inset-0 bg-indigo-600/5 rounded-2xl filter blur-xl group-hover:bg-indigo-600/10 transition-colors" />
               <div className="relative rounded-xl overflow-hidden bg-slate-900 aspect-video flex items-center justify-center text-slate-400 font-mono text-sm">
-                [Inventory & Stock Transfer Matrix Mockup]
+                 <Image src="/imgs/pos-img-3.png" className="object-fill" fill   sizes="100vw"  alt="Descriptive text" />
               </div>
             </div>
           </div>
