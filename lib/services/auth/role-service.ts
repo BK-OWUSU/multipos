@@ -107,8 +107,8 @@ static async updateRole(
         throw new Error("The requested role profile configuration framework does not exist.");
       }
 
-      if (existingRole.isSystem) {
-        throw new Error("Modifying hard-coded system role configurations is structurally prohibited.");
+      if (existingRole.isSystem && existingRole.name === "OWNER") {
+        throw new Error("Modifying hard-coded system role like OWNER configurations is structurally prohibited.");
       }
 
       // 3. Apply validation records changes via database mutator query 
