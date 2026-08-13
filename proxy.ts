@@ -80,7 +80,7 @@ export async function proxy(request: NextRequest) {
         return response;
     }
 
-    // --- PAGE-LEVEL ROUTING LOGIC --- 
+     // --- PAGE-LEVEL ROUTING LOGIC --- 
     const pathSegments = pathname.split("/").filter(Boolean);
     const urlSlug = pathSegments[0];
     
@@ -95,12 +95,40 @@ export async function proxy(request: NextRequest) {
     console.log("Evaluated Target Pathname:", pathname);
     console.log("Identified Role Security Key:", routeKey);
 
+    // Helper to calculate landing route based on your precise strict priority rules:
+    // 1. Full Admin (*) -> "dashboard"
+    // 2. Explicit access to "dashboard" -> "dashboard"
+    // 3. Explicit access to "shop-dashboard" -> Redirect to a shop fallback or general dashboard path
+    // 4. Scan for the very first valid key they actually have access to.
+
+    const determineFallbackRoute = (userAccess: string[]): string => {
+        // 1. Check for full admin or main business dashboard access
+        if (userAccess.includes("*") || userAccess.includes("dashboard")) {
+            return "dashboard";
+        }
+        
+        // 2. Check for shop dashboard access (routes directly to the static sub-folder page)
+        if (userAccess.includes("shop-dashboard")) {
+            return "shops/shop-dashboard"; 
+        }
+        
+        // 3. Last resort fallback: find their first valid matching module key
+        const firstMatchingKey = userAccess.find(key => allSystemKeys.includes(key));
+        
+        // Safety check: if their first key is generic "shops", force them to the actual page "shops/shop-dashboard"
+        if (firstMatchingKey === "shops") {
+            return "shops/shop-dashboard";
+        }
+
+        return firstMatchingKey || "profile"; // Ultimate safety net
+    };
+
+
     // 4. PASSWORD CHANGE ENFORCEMENT
     if (session?.needsPasswordChange) {
         const resetPath = `/${session.businessSlug}/reset-password`;
         if (pathname !== resetPath) {
             const redirectPass = NextResponse.redirect(new URL(resetPath, request.url));
-            // Clone sliding session cookie to the new redirect response object
             if (requestSession) redirectPass.cookies.set(POS_COOKIE_NAME, requestSession.value, response.cookies.get(POS_COOKIE_NAME));
             return redirectPass;
         }
@@ -115,36 +143,45 @@ export async function proxy(request: NextRequest) {
         return NextResponse.redirect(new URL("/login", request.url));
     }
 
-    // 6. AUTHENTICATED USER TRYING TO ACCESS PUBLIC PATHS
+    // 6. AUTHENTICATED USER TRYING TO ACCESS PUBLIC PATHS (e.g. hitting "/" or "/login")
     if (session && isPublicPath) {
-        const redirectDash = NextResponse.redirect(new URL(`/${session.businessSlug}/dashboard`, request.url));
+        const targetFallback = determineFallbackRoute(session.access);
+        const redirectDash = NextResponse.redirect(new URL(`/${session.businessSlug}/${targetFallback}`, request.url));
         if (requestSession) redirectDash.cookies.set(POS_COOKIE_NAME, requestSession.value, response.cookies.get(POS_COOKIE_NAME));
         return redirectDash;
     }
 
     // 7. TENANT ISOLATION & PERMISSIONS
     if (session && isTenantPath) {
+        const targetFallback = determineFallbackRoute(session.access);
+
         if (urlSlug !== session.businessSlug) {
-            const redirectIso = NextResponse.redirect(new URL(`/${session.businessSlug}/dashboard`, request.url));
+            const redirectIso = NextResponse.redirect(new URL(`/${session.businessSlug}/${targetFallback}`, request.url));
             if (requestSession) redirectIso.cookies.set(POS_COOKIE_NAME, requestSession.value, response.cookies.get(POS_COOKIE_NAME));
             return redirectIso;
         }
     
-        const systemRoutes = ["dashboard", "profile", "reset-password"];
-        if (systemRoutes.includes(routeKey)) {
+        // Critical: Remove "dashboard" from universal system paths so it is strictly evaluated by access checks!
+        const universalSystemRoutes = ["profile", "reset-password"];
+        if (universalSystemRoutes.includes(routeKey)) {
             return response;
         }
 
         const hasFullAccess = session.access.includes("*");
         const hasSpecificAccess = session.access.includes(routeKey);
 
+        // UNAUTHORIZED ACCESSED ROUTE EXECUTION
         if (!hasFullAccess && !hasSpecificAccess) {
-            const redirectAuth = NextResponse.redirect(new URL(`/${session.businessSlug}/dashboard`, request.url));
+            console.log(`Access Denied for ${routeKey}. Redirecting to priority route: ${targetFallback}`);
+            
+            // Defend against an infinite routing execution loop if the fallback happens to be what they are failing on
+            const permanentSafetyTarget = targetFallback === routeKey ? "profile" : targetFallback;
+
+            const redirectAuth = NextResponse.redirect(new URL(`/${session.businessSlug}/${permanentSafetyTarget}`, request.url));
             if (requestSession) redirectAuth.cookies.set(POS_COOKIE_NAME, requestSession.value, response.cookies.get(POS_COOKIE_NAME));
             return redirectAuth;
         }
     }
-
     return response;
 }
 

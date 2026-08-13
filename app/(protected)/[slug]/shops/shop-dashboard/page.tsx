@@ -103,37 +103,64 @@ function MicroMetricCard({ title, value, growth, icon, bgTone }: UpperCardProps)
 // ============================================================================
 export default function ShopDashboard() {
   // Zustand Store Integration
+  // Zustand Store Integration
   const { user, currentSlug } = useAuthStore();
-  const {metrics,salesOverview,topSellingProducts,cashRegister,inventory,recentSales,shopInfo,isLoading,fetchDashboardData} = useShopDashboardStore();
-  const { slug } = useParams();
+  const { metrics, salesOverview, topSellingProducts, cashRegister, inventory, recentSales, shopInfo, isLoading, fetchDashboardData } = useShopDashboardStore();
+  const { slug } = useParams(); // 'slug' is the [slug] business layout parameter
   const router = useRouter();
   
   const [selectedFilter, setSelectedFilter] = React.useState<DateFilterPreset>("daily");
   const [startDate, setCustomStartDate] = React.useState<string | Date | undefined>(undefined);
   const [endDate, setCustomEndDate] = React.useState<string | Date | undefined>(undefined);
 
+  // 1. SECURITY & ACCESS CONTROL CHECK
   useEffect(() => {
-    if (!hasAccess(user, "dashboard")) {
-      router.push(`/${user?.business.slug}/dashboard`);
+    if (!user) return;
+
+    // CRITICAL FIX: Check for "shop-dashboard" permission, NOT "dashboard"
+    const hasShopDashboardAccess = user.role.access.includes("*") || user.role.access.includes("shop-dashboard");
+
+    if (!hasShopDashboardAccess) {
+      console.warn("Unauthorized access to shop-dashboard. Redirecting...");
+      router.push(`/${user?.business?.slug}/profile`); // Safe absolute fallback route
     }
   }, [user, router]);
 
-useEffect(() => {
-  if (user?.currentShop?.id) {
-    fetchDashboardData({ 
-      shopId: user.currentShop.id, 
-      filter: selectedFilter,
-      startDate: startDate instanceof Date ? startDate.toISOString() : startDate,
-      endDate: endDate instanceof Date ? endDate.toISOString() : endDate
-    });
-  }
-}, [user, selectedFilter, fetchDashboardData, startDate, endDate]);
+  // 2. DATA UTILITY COMPILER FETCH
+  useEffect(() => {
+    // If the store context isn't set yet, don't trigger the API query
+    if (user?.currentShop?.id) {
+      fetchDashboardData({ 
+        shopId: user.currentShop.id, 
+        filter: selectedFilter,
+        startDate: startDate instanceof Date ? startDate.toISOString() : startDate,
+        endDate: endDate instanceof Date ? endDate.toISOString() : endDate
+      });
+    }
+  }, [user?.currentShop?.id, selectedFilter, fetchDashboardData, startDate, endDate]);
 
-  if (slug !== currentSlug) {
-    router.push(`/${user?.business.slug}/dashboard`);
-  }
+  // 3. TENANT ISOLATION VALIDATION
+  useEffect(() => {
+    if (slug && currentSlug && slug !== currentSlug) {
+      router.push(`/${user?.business?.slug}/dashboard`);
+    }
+  }, [slug, currentSlug, user, router]);
 
-  if (!user || !hasAccess(user, "dashboard")) return null;
+  // 4. RENDER GUARDS
+  if (!user) return null;
+
+  const isAuthorized = user.role.access.includes("*") || user.role.access.includes("shop-dashboard");
+  if (!isAuthorized) return null;
+
+  // 5. MISSING STORE SELECTION STATE FALLBACK
+  // If they are allowed here, but haven't selected a store location context yet
+  if (!user?.currentShop?.id) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
+        <p className="text-muted-foreground text-sm">Please select a store location from the sidebar menu to view metrics.</p>
+      </div>
+    );
+  }
 
   // Show loading spinner while fetching dashboard payload if desired
   if (isLoading && !metrics) {

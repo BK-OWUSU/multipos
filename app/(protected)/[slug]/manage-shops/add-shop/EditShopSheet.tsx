@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Building2, MapPin, Clock, Info } from "lucide-react";
+import { Building2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -87,7 +87,7 @@ export default function EditShopSheet({ shop, isOpen, onClose, onSuccess }: Edit
           if(onSuccess) onSuccess();
           if (res.data) {
             useAuthStore.getState().fetchUser();
-            router.push(`/${businessSlug}/shops`);
+            router.push(`/${businessSlug}/manage-shops/view-shops`);
             router.refresh();
           }
           return res.message || "Shop metrics updated successfully.";

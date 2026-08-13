@@ -38,7 +38,7 @@ export default function ManageShopsDashboard() {
   const { fetchShops, shops } = useShopStore();
     const user = useAuthStore((state) => state.user);
     const businessSlug = user?.business.slug;
-    const createShopPath = `/${businessSlug}/shops/add-shop`;
+    const createShopPath = `/${businessSlug}/manage-shops/add-shop`;
     const router = useRouter();
   
   useEffect(() => {

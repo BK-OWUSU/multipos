@@ -18,7 +18,6 @@ const SHOP_SCOPED_KEYS = [
   "time-card",
   "transactions",
   "pos",
-  "shop-dashboard",
   "cash-register",
   "shop-inventory",
   "shop-stocks-overview",
@@ -136,6 +135,16 @@ export const navConfig = [
     ],
   },
 
+  { title: "Manage Shops", 
+    accessKey: "manage-shops",
+     routeBase: "manage-shops", 
+    icon: HousePlus,
+     items: [
+      { title: "View Shops", accessKey: "view-shops", icon: List },
+      { title: "Add Shop", accessKey: "add-shop", icon: PlusCircle }
+    ]
+  },
+
   {
     groupLabel: "BRANCH OPERATIONS",
     title: "Shops",
@@ -143,14 +152,6 @@ export const navConfig = [
     routeBase: "shops",
     icon: Store,
     items: [
-      { title: "Manage Shops", 
-        accessKey: "manage-shops", 
-        icon: HousePlus,
-         items: [
-          { title: "View Shops", accessKey: "view-shops", icon: List },
-          { title: "Add Shop", accessKey: "add-shop", icon: PlusCircle }
-        ]
-      },
       { title: "Shop Dashboard", accessKey: "shop-dashboard", icon: CircleGauge },
       { title: "Pos", accessKey: "pos", icon: Monitor },
       { title: "Transactions", accessKey: "transactions", icon: ArrowRightLeft },
@@ -199,6 +200,7 @@ export const getNavData = (slug: string, shopSlug?: string | null): NavGroup[] =
       case "customers": groupUrl = `/${slug}/customers`; break;
       case "sale-transactions": groupUrl = `/${slug}/sale-transactions`; break;
       case "analysis": groupUrl = `/${slug}/analysis`; break;
+      case "manage-shops": groupUrl = `/${slug}/manage-shops`; break;
       case "notifications": groupUrl = `/${slug}/notifications`; break;
       case "settings": groupUrl = `/${slug}/settings`; break;
       default: groupUrl = "#";
