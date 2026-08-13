@@ -3,54 +3,10 @@
 import React, { useRef } from "react";
 import { Printer, CheckCircle, Store, MapPin, Phone, Mail, Calendar, User, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SaleReceipt } from "@/types/types/sale.receipt.type";
 
 interface PrintReceiptProps {
-  sale: {
-    customId: string;
-    createdAt: Date | string;
-    totalAmount: number | string;
-    discountAmount: number | string;
-    paymentType: string;
-    business?: {
-      name: string;
-      phone?: string | null;
-      email?: string | null;
-      address?: string | null;
-      currencySymbol?: string;
-    };
-    shop: {
-      name: string;
-      address?: string | null;
-      phone?: string | null;
-      city?: string | null;
-    };
-    employee: {
-      firstName: string;
-      lastName: string;
-    };
-    customer?: {
-      firstName: string;
-      lastName: string;
-      phone?: string | null;
-    } | null;
-    items: Array<{
-      id: string;
-      quantity: number;
-      unitPrice: number | string;
-      subtotal: number | string;
-      variant: {
-        sku: string;
-        product: {
-          name: string;
-        };
-      };
-    }>;
-    payments?: Array<{
-      method: string;
-      amount: number | string;
-      reference?: string | null;
-    }>;
-  };
+sale: SaleReceipt;
   onClose?: () => void;
 }
 
@@ -177,7 +133,7 @@ export function ReceiptPrintView({ sale, onClose }: PrintReceiptProps) {
             <tbody className="divide-y divide-slate-100">
               {sale.items.map((item) => (
                 <tr key={item.id} className="text-[11px]">
-                  <td className="py-1.5 pr-1 font-medium truncate max-w-[110px]">
+                  <td className="py-1.5 pr-1 font-medium truncate max-w-27.5">
                     {item.variant.product.name}
                     <div className="text-[9px] text-slate-400 font-mono">{item.variant.sku}</div>
                   </td>

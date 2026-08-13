@@ -5,10 +5,11 @@ import { POSCheckoutInput } from "@/types/schema/sale.schema";
 import { PaystackResponse } from "@paystack/inline-js";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { SaleReceipt } from "@/types/types/sale.receipt.type";
 
 interface CheckoutButtonProps {
   checkoutPayload: POSCheckoutInput;
-  onSuccess: (saleId: string, saleData?: any) => void;
+  onSuccess: (saleId: string, saleData?: SaleReceipt) => void;
   disabled?: boolean;
 }
 
@@ -77,7 +78,7 @@ export default function CheckoutButton({ checkoutPayload, onSuccess, disabled }:
       if (explicitPaymentMethod === "CASH") {
         // Extract the sale object returned by your backend API
         const cashSaleData = responseData.data?.sale || responseData.sale;
-        onSuccess(verifiedSaleId, cashSaleData);
+        onSuccess(verifiedSaleId, cashSaleData as SaleReceipt);
         setIsProcessing(false);
         return;
       }

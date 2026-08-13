@@ -23,6 +23,7 @@ import { useDiscountStore } from "@/store/discountStore";
 import { Button } from "@/components/ui/button";
 import { useNotificationStore } from "@/store/notification.store";
 import { ReceiptPrintView } from "@/components/print-component/ReceiptPrintViewComponent";
+import { SaleReceipt } from "@/types/types/sale.receipt.type";
 
 export interface POSCustomer {
   id: string;
@@ -80,7 +81,7 @@ export default function SaleTerminalPage() {
   const customerDropdownRef = useRef<HTMLDivElement>(null);
 
   // NEW: State to track the completed sale for receipt preview
-  const [completedSale, setCompletedSale] = useState<any>(null);
+  const [completedSale, setCompletedSale] = useState<SaleReceipt | null>(null);
 
   // LIFECYCLE DISPATCHERS
   useEffect(() => {
@@ -291,7 +292,7 @@ const currentCheckoutPayload = useMemo<POSCheckoutInput>(() => {
   };
 }, [user?.business?.id, user?.currentShop, user?.id, activeSession, selectedCustomer, paymentMethod, cartTotals.total, cashPaid, momoPaid, cart, cartTotals.discountAmount,selectedDiscount]);
 
-  const handleSaleSuccess = (saleId: string, saleData?: any) => {
+  const handleSaleSuccess = (saleId: string, saleData?: SaleReceipt) => {
     toast.success(`Transaction processing complete!`);
 
     // If it's a cash sale and the backend returned the sale entity, trigger receipt popup
@@ -764,7 +765,7 @@ const currentCheckoutPayload = useMemo<POSCheckoutInput>(() => {
             {/* Replace ReceiptPrintView with your actual receipt component path */}
             <ReceiptPrintView sale={completedSale} onClose={() => setCompletedSale(null)} />
             <div className="space-y-4 py-2">
-              <p className="text-xs text-slate-500 text-center">Receipt ready for print or download for Sale ID: <span className="font-mono font-bold text-slate-800">{completedSale.id}</span></p>
+              <p className="text-xs text-slate-500 text-center">Receipt ready for print or download for Sale ID: <span className="font-mono font-bold text-slate-800">{completedSale.customId}</span></p>
               
               <div className="flex gap-2">
                 <Button 

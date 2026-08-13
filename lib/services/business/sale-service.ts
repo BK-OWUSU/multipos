@@ -795,7 +795,15 @@ static async getSaleById(saleId: string, businessId: string) {
         customer: true,
         employee: { select: { firstName:true, lastName:true, email: true } },
         shop: { select: { name: true, address: true, phone: true } },
-        invoice: true
+        invoice: true,
+        business: {select: {
+            name: true,
+            logoUrl: true,
+            phone: true,
+            email: true,
+            address: true,
+            currencySymbol:true
+        }}
       }
     });
 
