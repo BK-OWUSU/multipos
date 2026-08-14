@@ -1,3 +1,4 @@
+"use client"
 
 import ClockInClockOutInterceptor from "@/components/reusables/security/ClockInClockOutInterceptor";
 import CashRegisterPage from "./CashRegisterPage"
