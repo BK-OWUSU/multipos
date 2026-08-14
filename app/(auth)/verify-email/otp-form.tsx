@@ -36,7 +36,7 @@ export function InputOTPForm() {
   const onSubmit: SubmitHandler<OTPFormSchema> = async(data) => {
     const response = await verifyOtp({pin: data.pin}) as OTPResponse;
      // if User needs to reset-password
-       if(response.success == false && response.requiresPasswordChange) {
+       if(response.success === false && response.requiresPasswordChange) {
         router.push(response.redirectTo ? response.redirectTo : "/login");
         return;
       }     

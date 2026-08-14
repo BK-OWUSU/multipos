@@ -134,6 +134,9 @@ static async createEmployee(
             result.employee.firstName,
             result.businessSlug
           );
+
+          console.log("Email: ", result.employee.email)
+          console.log("Password: ",  tempPassword)
         } catch (err) {
           // Soft-fail: Log execution break but do not discard successfully committed records
           console.error("ASYNC_ONBOARDING_MAIL_DISPATCH_FAILURE:", err);
@@ -528,6 +531,7 @@ static async updateEmployee(
           result.employee.firstName,
           result.businessSlug
         );
+         console.log("TEMP PASSWORD FRM UPDATE EMPLOYEE: ", tempPassword)
       } catch (err) {
         console.error("ASYNC_UPDATE_ONBOARDING_MAIL_DISPATCH_FAILURE:", err);
       }
@@ -1036,6 +1040,7 @@ static async grantEmployeeSystemAccess(empId: string, userId: string, employeeId
                 result.employee.firstName,
                 businessSlug
             );
+            console.log("TEMP PASSWORD FRM GRANT ACESS: ", tempPassword)
         } catch (err) {
             console.error("Email sending failed:", err);
             // Non-blocking catch preserves the database transaction state

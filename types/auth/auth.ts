@@ -283,14 +283,7 @@ export type LoginResponse = {
     }[];
     businessesSlug?: string;
     shopSlug?: string;
-}
-
-export type SignUpResponse = {
-    success?: boolean;
-    redirectTo?: string;
-    message?: string;
-    error?: string;
-    status?: number;
+    user?: User;
 }
 
 export type AppResponse = {

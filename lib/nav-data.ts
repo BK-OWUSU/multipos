@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 // Explicit list of sub-features that require a distinct branch store location parameter context
-const SHOP_SCOPED_KEYS = [
+export const SHOP_SCOPED_KEYS = [
   "invoices",
   "time-card",
   "transactions",

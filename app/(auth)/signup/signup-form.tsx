@@ -10,7 +10,7 @@ import { Check, Info, Store, ShieldCheck, Building2, User, Eye, Sparkles } from 
 
 import { useAuthStore } from "@/store/useAuthStore"
 import { SignUpFormSchema, signupSchema } from "@/types/schema/auth.schema"
-import { SignUpResponse } from "@/types/auth/auth"
+import { AppResponse} from "@/types/auth/auth"
 
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -96,8 +96,8 @@ export function SignupForm() {
 
   //Onsubmit function to handle submit
   const onSubmit: SubmitHandler<SignUpFormSchema> = async (data) => {
-    const response = await signup(data) as SignUpResponse;
-    if (response.success && response.message && response.redirectTo) {
+    const response = await signup(data) as AppResponse;
+    if (response.success && response.redirectTo) {
       router.push(response.redirectTo);
       return;
     }

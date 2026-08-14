@@ -193,6 +193,11 @@ static async signUp(rawData: SignUpFormSchema) {
             userName,
             userOtpCode
         );
+        
+        // console.log("===REGISTRATION===")
+        // console.log("Email: ", ownerEmail)
+        // console.log("Username: ", userName)
+        // console.log("OTP: ", userOtpCode)
         } catch (err) {
         console.error("Email sending failed:", err);
         }

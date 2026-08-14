@@ -10,11 +10,13 @@ export class ResetPasswordService {
     const token = cookieStore.get(PASSWORD_RESET_COOKIE_NAME)?.value;
 
     if (!token) {
-      return NextResponse.json({ error: "No active session found. Please log in again.", success: false }, { status: 401 });
-    }
-
-    const decoded = verifyEmailVerificationToken(token);
-    if (!decoded) {
+       console.log("HERE WAS HIT:  ", token);
+       return NextResponse.json({ error: "No active session found. Please log in again.", success: false }, { status: 401 });
+      }
+      
+      const decoded = verifyEmailVerificationToken(token);
+      console.log("HERE WAS DECODE:  ", decoded);
+      if (!decoded) {
       return NextResponse.json({ error: "Session expired or invalid.", success: false }, { status: 401 });
     }
 
@@ -80,7 +82,7 @@ export class ResetPasswordService {
       });
     });
 
-    const response = NextResponse.json({ success: true, message: "Password updated successfully!",redirectTo: "/login" }, { status: 200 });
+    const response = NextResponse.json({ success: true, message: "Password updated successfully!", redirectTo: "/login" }, { status: 200 });
     // Clear both cookies
     clearPOSAppSessionCookie(response);
     clearPasswordResetSessionCookie(response)

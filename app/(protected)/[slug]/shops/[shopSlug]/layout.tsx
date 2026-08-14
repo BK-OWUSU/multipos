@@ -3,6 +3,7 @@
 import React, { useEffect } from "react";
 import { useParams } from "next/navigation";
 import axios from "axios"; // or whatever API client instance bundle setup you interact with
+import { ShopGuard } from "@/securityContext/ShopGuard";
 
 export default function ShopContextLayout({ children }: { children: React.ReactNode }) {
   const params = useParams();
@@ -18,6 +19,8 @@ export default function ShopContextLayout({ children }: { children: React.ReactN
   }, [shopId]);
 
   return <>
+    <ShopGuard>
       {children}
+    </ShopGuard>
   </>;
 }

@@ -1,6 +1,6 @@
 import {create} from "zustand"
 import apiClient from "@/lib/api-client"
-import { LoginResponse, OTPResponse, SignUpResponse, User } from "@/types/auth/auth"
+import { LoginResponse, OTPResponse, AppResponse, User } from "@/types/auth/auth"
 import { LoginSchema, OTPFormSchema, PasswordSchema, SignUpFormSchema } from "@/types/schema/auth.schema";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
@@ -12,13 +12,13 @@ type AuthStore = {
     loading: boolean;
     isLoggedIn: boolean;
     login: (data: LoginSchema)=> Promise<LoginResponse>;
-    signup: (data: SignUpFormSchema) => Promise<SignUpResponse>;
+    signup: (data: SignUpFormSchema) => Promise<AppResponse>;
     logout: () => Promise<void>;
     logoutExpiration: () => Promise<void>;
     fetchUser: () => Promise<void>;
     verifyOtp: (data: OTPFormSchema)=> Promise<OTPResponse>;
     resendOtp: ()=> Promise<OTPResponse>;
-    resetPassword: (data: PasswordSchema )=> Promise<SignUpResponse>; //This is similar to signUp response Data structure
+    resetPassword: (data: PasswordSchema )=> Promise<AppResponse>; //This is similar to signUp response Data structure
 }
 
 export const useAuthStore = create<AuthStore>((set, get)=>({
@@ -53,62 +53,70 @@ export const useAuthStore = create<AuthStore>((set, get)=>({
             const response = await apiClient.post("/auth/login", data);
             //Hydrate user data in the store after successful login
             await get().fetchUser();
-            const userData = response.data?.user;
-            return {
-                success: response.data?.success,
-                redirectTo: response.data?.redirectTo,
-                status: response?.status,
-                multipleBusinesses: response.data?.multipleBusinesses,
-                businesses: response.data?.multipleBusinesses,
-                businessesSlug: userData?.businessSlug,
-                shopSlug: userData?.shopSlug,
-            } as LoginResponse;
+            const res = response.data as LoginResponse;
+            console.log(res)
+            return res;
         } catch (error: unknown) {
-            if(error instanceof AxiosError) {
-                const response = error.response?.data as LoginResponse;   
-                console.log("Login error: ", error);
-                return {
-                        success: response?.success || false,
-                        isVerified: response?.isVerified,
-                        redirectTo: response?.redirectTo,
-                        error: response?.error,
-                        requiresPasswordChange: response?.requiresPasswordChange,
-                        status: error.response?.status || 500
-                    } as LoginResponse;
-            }
+            console.log("Registration error: ", error);
+            const errMsg = (error as Error).message || "Network error. Please try again.";
             return {
             success: false,
-            error: "Network error. Please try again.",
+            error:errMsg ,
             status: 500
         } as LoginResponse;
         }
-    }, 
+    },  
+    // login: async(data) => {
+    //     try {
+    //         const response = await apiClient.post("/auth/login", data);
+    //         console.log("Hello")
+    //         console.log(response)
+    //         //Hydrate user data in the store after successful login
+    //         await get().fetchUser();
+    //         const userData = response.data?.user;
+    //         return {
+    //             success: response.data?.success,
+    //             redirectTo: response.data?.redirectTo,
+    //             status: response?.status,
+    //             multipleBusinesses: response.data?.multipleBusinesses,
+    //             businesses: response.data?.multipleBusinesses,
+    //             businessesSlug: userData?.businessSlug,
+    //             shopSlug: userData?.shopSlug,
+    //         } as LoginResponse;
+    //     } catch (error: unknown) {
+    //         if(error instanceof AxiosError) {
+    //             const response = error.response?.data;   
+    //             const res = response?.data  as LoginResponse; 
+    //             console.log("Hello - 2")
+    //             console.log(res)
+    //             console.log("Login error: ", error);
+                
+    //             return {
+    //                     success: response?.success || false,
+    //                     isVerified: response?.isVerified,
+    //                     redirectTo: response?.redirectTo,
+    //                     error: response?.error,
+    //                     requiresPasswordChange: response?.requiresPasswordChange,
+    //                     status: error.response?.status || 500
+    //                 } as LoginResponse;
+    //         }
+    //         return {
+    //         success: false,
+    //         error: "Network error. Please try again.",
+    //         status: 500
+    //     } as LoginResponse;
+    //     }
+    // }, 
     
     signup: async(data) => {
         try {
             const response = await apiClient.post("/auth/signup", data) ;
-            return {
-                success: response.data?.success,
-                redirectTo: response.data?.redirectTo,
-                status: response?.status,
-                message: response.data?.message
-            } as SignUpResponse;
+            const res = response.data as AppResponse;
+            return res;
         } catch (error: unknown) {
-            if(error instanceof AxiosError) {
-                const response = error.response?.data as SignUpResponse;   
-                console.log("Registration error: ", error);
-                return {
-                        success: response?.success || false,
-                        redirectTo: response?.redirectTo,
-                        error: response?.error,
-                        status: error.response?.status || 500
-                    } as SignUpResponse;
-            }
-            return {
-            success: false,
-            error: "Network error. Please try again.",
-            status: 500
-        } as SignUpResponse;
+            console.log("Registration error: ", error);
+            const errMsg = (error as Error).message || "Registration error";
+            return { success: false, error: errMsg } as AppResponse
         }
     },
 
@@ -141,6 +149,7 @@ export const useAuthStore = create<AuthStore>((set, get)=>({
         try {
             const result =  await apiClient.post("/auth/verify-otp", {code: data.pin});
             const response = result.data as OTPResponse;
+            console.log(response)
             if (response.message) {
                 toast.success(response.message);
             }
@@ -202,27 +211,12 @@ export const useAuthStore = create<AuthStore>((set, get)=>({
  resetPassword: async(data) => {
         try {
             const response = await apiClient.post("/auth/reset-password", data) ;
-            return {
-                success: response.data?.success,
-                redirectTo: response.data?.redirectTo,
-                status: response?.status,
-                message: response.data?.message
-            } as SignUpResponse;
+            const res = response.data as AppResponse;
+            return { res } as AppResponse;
         } catch (error: unknown) {
-            if(error instanceof AxiosError) {
-                const response = error.response?.data as SignUpResponse;   
-                console.log("Password reset error: ", error);
-                return {
-                        success: response?.success || false,
-                        error: response?.error,
-                        status: error.response?.status || 500
-                    } as SignUpResponse;
-            }
-            return {
-            success: false,
-            error: "Network error. Please try again.",
-            status: 500
-        } as SignUpResponse;
+            console.log("Password reset error: ", error);
+            const errMsg = (error as Error).message || "Password reset error";;   
+            return {error: errMsg, success: false}
         }
     },    
 }));

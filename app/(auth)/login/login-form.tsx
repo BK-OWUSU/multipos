@@ -6,20 +6,17 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useForm, SubmitHandler, FormProvider } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { motion, AnimatePresence } from "motion/react"
+import { motion} from "motion/react"
 import { 
   LogIn, 
   Loader2, 
   ShieldCheck, 
-  Sparkles, 
   TrendingUp, 
   DollarSign, 
   Package, 
   ShoppingCart, 
   Users, 
-  ArrowRight,
   Lock,
-  CheckCircle2,
   Store,
   BarChart3
 } from "lucide-react"
@@ -50,7 +47,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"form">)
 
     if (response.isVerified === false && response.redirectTo) {
       router.push(response.redirectTo)
-      return
+      return;
     } 
       
     if (response.requiresPasswordChange && response.redirectTo) {
@@ -68,6 +65,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"form">)
     }
       
     if (response.success && response.multipleBusinesses) {
+      toast.success("Multiple Business Owner Implementation coming soon")
       return
     }
 
@@ -119,7 +117,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"form">)
                 type="submit" 
                 text="Sign in to Workspace" 
                 isLoading={isSubmitting} 
-                className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 font-bold text-sm rounded-xl shadow-lg shadow-blue-600/25 transition-all duration-200"
+                className="w-full h-12 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 font-bold text-sm rounded-xl shadow-lg shadow-blue-600/25 transition-all duration-200"
                 icon={<LogIn className="w-4 h-4 ml-1" />}
               />
             </motion.div>
@@ -136,9 +134,9 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"form">)
           )}
 
           <div className="relative flex py-2 items-center">
-            <div className="flex-grow border-t border-slate-200"></div>
-            <span className="flex-shrink mx-4 text-slate-400 text-[11px] font-bold uppercase tracking-wider">or continue with</span>
-            <div className="flex-grow border-t border-slate-200"></div>
+            <div className="grow border-t border-slate-200"></div>
+            <span className="shrink mx-4 text-slate-400 text-[11px] font-bold uppercase tracking-wider">or continue with</span>
+            <div className="grow border-t border-slate-200"></div>
           </div>
 
           {/* UI-only Google Authentication Button */}
@@ -195,7 +193,7 @@ export default function LoginPage() {
             y: [0, 40, 0],
           }}
           transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -bottom-32 -right-32 w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-3xl"
+          className="absolute -bottom-32 -right-32 w-125 h-125 bg-indigo-600/20 rounded-full blur-3xl"
         />
       </div>
 
@@ -203,7 +201,7 @@ export default function LoginPage() {
         initial={{ opacity: 0, y: 20, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.6, ease: [0.21, 0.47, 0.32, 0.98] }}
-        className="w-full max-w-[1440px] bg-white/95 backdrop-blur-2xl lg:rounded-[2.5rem] shadow-2xl shadow-blue-950/20 border border-white/20 overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[850px] relative z-10"
+        className="w-full max-w-360 bg-white/95 backdrop-blur-2xl lg:rounded-[2.5rem] shadow-2xl shadow-blue-950/20 border border-white/20 overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-212.5 relative z-10"
       >
 
         {/* ================= LEFT SIDE: AUTHENTICATION PANEL ================= */}
@@ -212,7 +210,7 @@ export default function LoginPage() {
           {/* Top Brand Logo */}
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-3 font-bold group">
-              <div className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30 group-hover:scale-105 transition-transform">
+              <div className="flex size-11 items-center justify-center rounded-2xl bg-linear-to-br from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30 group-hover:scale-105 transition-transform">
                 <Image src="/logo-trans.png" alt="MultiPOS Logo" width={22} height={22} className="brightness-200" />
               </div>
               <div className="flex flex-col">
@@ -223,7 +221,7 @@ export default function LoginPage() {
           </div>
 
           {/* Centered Auth Card Container */}
-          <div className="w-full max-w-[420px] mx-auto my-auto space-y-8 py-6">
+          <div className="w-full max-w-105 mx-auto my-auto space-y-8 py-6">
             
             <div className="space-y-3">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-100">
@@ -253,10 +251,10 @@ export default function LoginPage() {
         </div>
 
         {/* ================= RIGHT SIDE: LIVE PRODUCT SHOWCASE ================= */}
-        <div className="lg:col-span-7 bg-gradient-to-br from-[#0b1329] via-[#111c38] to-[#070b16] p-8 lg:p-16 flex flex-col justify-between relative overflow-hidden text-white border-l border-slate-800/50">
+        <div className="lg:col-span-7 bg-linear-to-br from-[#0b1329] via-[#111c38] to-[#070b16] p-8 lg:p-16 flex flex-col justify-between relative overflow-hidden text-white border-l border-slate-800/50">
           
           {/* Subtle Grid Background Overlay */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-size-[32px_32px] pointer-events-none" />
 
           {/* Top Floating Badge Bar */}
           <div className="flex items-center justify-between z-10">
@@ -270,7 +268,7 @@ export default function LoginPage() {
           </div>
 
           {/* Central Interactive Floating Showcase Canvas */}
-          <div className="relative w-full max-w-[620px] mx-auto my-auto py-8">
+          <div className="relative w-full max-w-155 mx-auto my-auto py-8">
             
             {/* Main Central Dashboard Mockup Card */}
             <motion.div
@@ -335,7 +333,7 @@ export default function LoginPage() {
                         initial={{ height: 0 }}
                         animate={{ height: `${val}%` }}
                         transition={{ duration: 0.8, delay: i * 0.05, ease: "easeOut" }}
-                        className="w-full bg-gradient-to-t from-blue-600 to-indigo-400 rounded-t-md"
+                        className="w-full bg-linear-to-t from-blue-600 to-indigo-400 rounded-t-md"
                       />
                     </div>
                   ))}

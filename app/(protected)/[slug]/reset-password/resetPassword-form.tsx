@@ -11,7 +11,7 @@ import { useAuthStore } from "@/store/useAuthStore"
 import CustomButton from "@/components/reusables/CustomButton"
 import { SquareAsterisk } from "lucide-react";
 import Link from "next/link"
-import { SignUpResponse } from "@/types/auth/auth"
+import { AppResponse } from "@/types/auth/auth"
 
 
 
@@ -27,7 +27,7 @@ export function ResetPasswordForm({className,...props}: React.ComponentProps<"fo
     formState:{isSubmitting, errors}
     } = forms
   const onSubmit: SubmitHandler<PasswordSchema> = async(data) => {
-      const response = await resetPassword(data) as SignUpResponse;
+      const response = await resetPassword(data) as AppResponse;
     //If success, redirect user to login 
        if (response.success && response.redirectTo){
         router.push(response.redirectTo)

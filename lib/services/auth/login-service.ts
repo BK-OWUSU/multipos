@@ -51,6 +51,7 @@ static async login(email: string, password: string, ipAddress?: string, userAgen
         });
 
         if (users.length === 0) {
+            console.log("STAGE ====>  1")
             return NextResponse.json({ success: false, error: "Invalid email or password" }, { status: 401 });
         }
 
@@ -62,16 +63,22 @@ static async login(email: string, password: string, ipAddress?: string, userAgen
                 validUsers.push(user);
             }
         }
+        // console.log(users)
+        const u = users[0];
+        const isValidPassword = await verifyPassword(password, u.password);
 
+        console.log("PASS MATCH:  ", isValidPassword)
+        
         if (validUsers.length === 0) {
+            console.log("STAGE ====>  2")
             return NextResponse.json({ success: false, error: "Invalid email or password" }, { status: 401 });
         }
-
+        
         // 3. Handle specific scenario: Only ONE valid business found
         if (validUsers.length === 1) {
             const user = validUsers[0];
             const emp = user.employee;
-
+            
             // Check if email is verified
             if (!user.isVerified) {
                 const verifyEmail_token = {
@@ -80,7 +87,7 @@ static async login(email: string, password: string, ipAddress?: string, userAgen
                     purpose: "OTP Verification via email",
                     businessId: emp.businessId 
                 }
-                const response = NextResponse.json({ error: "Please verify your email first", isVerified: false, redirectTo: `/verify-email?email=${encodeURIComponent(emp.email)}`, success: false },{ status: 403 });
+                const response = NextResponse.json({ message: "Please verify your email first", isVerified: false, redirectTo: `/verify-email?email=${encodeURIComponent(emp.email)}`, success: false },{ status: 201 });
 
                 const otpCode = await prisma.$transaction(async (tx) => {
                     const code = generateOTP();
@@ -88,16 +95,21 @@ static async login(email: string, password: string, ipAddress?: string, userAgen
                     return code;
                 });
 
+                
                 try {
                     await sendOTPEmail(emp.email, emp.firstName, otpCode);
+                    console.log("OTP VERIFICATION VIA LOGIN: ", otpCode)
                 } catch (err) {
                     console.error("Email sending failed:", err);
                 }
-
+                
                 setEmailVerificationSessionCookie(response, verifyEmail_token);
                 return response;
             }
-
+            
+            console.log("NEED PASSWORD CHANGE")
+            console.log("STAGE ====>  3")
+            console.log(emp)
             // Check if password change is required (e.g., first-time login for staff)
             if (user.needsPasswordChange) {
                 const passwordToken_object = {
@@ -107,7 +119,7 @@ static async login(email: string, password: string, ipAddress?: string, userAgen
                     businessId: emp.businessId
                 }
                 
-                const response = NextResponse.json({ error: "Password change required", success: false, requiresPasswordChange: true, redirectTo: `/${emp.business.slug}/reset-password` },{ status: 403 });
+                const response = NextResponse.json({ message: "Password change required", success: false, requiresPasswordChange: true, redirectTo: `/${emp.business.slug}/reset-password` },{ status: 201 });
                 setPasswordResetSessionCookie(response, passwordToken_object)
                 return response;
             }
