@@ -12,8 +12,7 @@ export default function CashRegisterInterceptor() {
        const { activeSession, loading, openCashSession } = useSaleStore();
        const {user} = useAuthStore();
        const businessSlug = user?.business.slug;
-       const shopSlug = user?.currentShop?.shopSlug;
-       const shopDashboardPath = `/${businessSlug}/shops/${shopSlug}/shop-dashboard`
+       const shopDashboardPath = `/${businessSlug}/shops/shop-dashboard`
 
        const router = useRouter();
 
