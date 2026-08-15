@@ -282,7 +282,7 @@ static async processCheckout(
     const dataResult = {
       paymentMethod: "CASH",
       saleId: result.saleId,
-      sale: completeSaleData.success ? completeSaleData.data : null,
+      sale: completeSaleData.success ? completeSaleData.sale : null,
     }
 
     return {
@@ -588,7 +588,7 @@ static async verifySalesStatusOnline(reference: string, userId: string) {
         status: 200, 
         saleId: targetSaleId, 
         paymentStatus: "COMPLETED",
-        sale: completeSaleData.success ? completeSaleData.data : null,
+        sale: completeSaleData.success ? completeSaleData.sale : null,
         message: "Transaction completed." };
     }
 
@@ -808,25 +808,7 @@ static async getSaleById(saleId: string, businessId: string) {
     });
 
     if (!sale) return { success: false, error: "Requested transaction context not found." };
-    // ── SERIALIZE PRISMA DECIMALS TO PLAIN NUMBERS ──
-      const serializedSale = {
-        ...sale,
-        totalAmount: sale.totalAmount ? Number(sale.totalAmount) : 0,
-        discountAmount: sale.discountAmount ? Number(sale.discountAmount) : 0,
-        
-        items: sale.items.map(item => ({
-          ...item,
-          unitPrice: Number(item.unitPrice),
-          costPrice: Number(item.costPrice),
-          subtotal: Number(item.subtotal),
-        })),
-
-        payments: sale.payments.map(payment => ({
-          ...payment,
-          amount: Number(payment.amount),
-        }))
-      };
-    return { success: true, data: serializedSale };
+    return { success: true,data: sale };
   } catch (error) {
     console.error("Error pulling distinct sale file record:", error);
     return { success: false, error: "Failed to load individual sale details." };

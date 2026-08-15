@@ -39,3 +39,27 @@ export async function verifyOnlinePayment(reference: string) {
         return response;
     } 
 }
+
+export async function getSaleByIdAction(saleId: string) {
+    const session = await getSession();
+
+    // 1. Check Session
+    if(!session || typeof session === "string") {
+        return { 
+            success: false, 
+            error: "Unauthorized session",
+            status: 400
+        } as AppResponse;
+    }
+
+    const { businessId } = session;
+
+    const response = await SaleService.getSaleById(saleId, businessId);
+
+    if (response.success) {
+        const sale = response.data;
+        return {success: true, data: sale} as AppResponse;
+    }else {
+        return {success:false, error: "Failed to fetch Sale transaction"} as AppResponse;
+    } 
+}

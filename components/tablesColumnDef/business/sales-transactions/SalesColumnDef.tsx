@@ -16,7 +16,8 @@ import {
   CircleDollarSign, 
   Activity, 
   Store,
-  Eye 
+  Eye, 
+  Printer
 } from "lucide-react";
 import { Sale } from "@/types/sale.type";
 import CurrencyFormatter from "@/components/reusables/CurrencyFormter";
@@ -25,6 +26,7 @@ import { formatStandardDateTime } from "@/lib/utils";
 // 1. Table Meta interface for Sales Actions
 export interface SalesTableMeta {
   onViewSale?: (sale: Sale) => void;
+  onPrintReceipt?: (sale: Sale) => void;
 }
 
 // 2. Action Cell Component
@@ -42,16 +44,29 @@ export function SalesRowActions<TData extends Sale>({
 
   return (
     <div className="flex items-center justify-end gap-2 pr-2">
-      <Button 
-        variant="ghost" 
-        size="sm" 
-        className="h-8 gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg text-xs font-medium"
-        onClick={() => meta?.onViewSale?.(sale)}
-      >
-        <Eye className="h-4 w-4 text-slate-400" />
-        View Sale
-      </Button>
-    </div>
+      {/* Print Receipt Button */}
+        {sale.status === "COMPLETED" && (
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="h-8 gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg text-xs font-medium"
+          onClick={() => meta?.onPrintReceipt?.(sale)}
+        >
+          <Printer className="h-4 w-4 text-slate-400" />
+          Print
+        </Button>   
+        )}
+    
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="h-8 gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg text-xs font-medium"
+          onClick={() => meta?.onViewSale?.(sale)}
+        >
+          <Eye className="h-4 w-4 text-slate-400" />
+          View Sale
+        </Button>
+      </div>
   );
 }
 
@@ -158,7 +173,7 @@ export const saleTransactionsColumnDef: ColumnDef<Sale>[] = [
       return (
         <div className="flex flex-col">
           <span className="text-gray-900 font-medium text-xs">{shop.name}</span>
-          {shop.address && <span className="text-[10px] text-slate-400 truncate max-w-[160px]">{shop.address}</span>}
+          {shop.address && <span className="text-[10px] text-slate-400 truncate max-w-40">{shop.address}</span>}
         </div>
       );
     },

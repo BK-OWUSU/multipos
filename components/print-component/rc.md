@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useRef } from "react";
-import { Printer } from "lucide-react";
+import { Printer} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SaleReceipt } from "@/types/types/sale.receipt.type";
 
 interface PrintReceiptProps {
-  sale: SaleReceipt;
+sale: SaleReceipt;
   onClose?: () => void;
 }
 
@@ -63,7 +63,7 @@ export function ReceiptPrintView({ sale, onClose }: PrintReceiptProps) {
     windowPrint.focus();
   };
 
-  const currencySymbol = sale.business?.currencySymbol || "₵";
+ const currencySymbol = sale.business?.currencySymbol || "₵";
 
   return (
     <div className="flex flex-col items-center justify-center space-y-4">
@@ -88,9 +88,10 @@ export function ReceiptPrintView({ sale, onClose }: PrintReceiptProps) {
         className="bg-white text-slate-900 p-6 rounded-2xl border border-slate-200 shadow-sm w-full max-w-sm font-mono text-xs space-y-4"
       >
         {/* Header Metadata */}
+       {/* Header Metadata */}
         <div className="text-center space-y-1 pb-3 border-b border-dashed border-slate-300">
           <h2 className="text-base font-bold uppercase tracking-tight">{sale.business?.name || "Store Receipt"}</h2>
-          <p className="text-[11px] font-semibold text-slate-700">{sale.shop?.name || "Main Branch"}</p>
+          <p className="text-[11px] font-semibold text-slate-700">{sale.shop?.name}</p>
           {sale.shop?.address && <p className="text-[10px] text-slate-500">{sale.shop?.address}</p>}
           {sale.shop?.city && <p className="text-[10px] text-slate-500">{sale.shop?.city}</p>}
           {sale.business?.phone && <p className="text-[10px] text-slate-500">Tel: {sale.business?.phone}</p>}
@@ -104,15 +105,11 @@ export function ReceiptPrintView({ sale, onClose }: PrintReceiptProps) {
           </div>
           <div className="flex justify-between">
             <span className="text-slate-500">Date:</span>
-            <span>{sale.createdAt ? new Date(sale.createdAt).toLocaleString() : ""}</span>
+            <span>{new Date(sale.createdAt).toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-slate-500">Cashier:</span>
-            <span>
-              {sale.employee?.firstName && sale.employee?.lastName 
-                ? `${sale.employee.firstName} ${sale.employee.lastName}` 
-                : "Staff"}
-            </span>
+            <span>{sale.employee.firstName} {sale.employee.lastName}</span>
           </div>
           {sale.customer && (
             <div className="flex justify-between">
@@ -134,11 +131,11 @@ export function ReceiptPrintView({ sale, onClose }: PrintReceiptProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {(sale.items || []).map((item) => (
+              {sale.items.map((item) => (
                 <tr key={item.id} className="text-[11px]">
                   <td className="py-1.5 pr-1 font-medium truncate max-w-27.5">
-                    {item.variant?.product?.name || "Product"}
-                    <div className="text-[9px] text-slate-400 font-mono">{item.variant?.sku}</div>
+                    {item.variant.product.name}
+                    <div className="text-[9px] text-slate-400 font-mono">{item.variant.sku}</div>
                   </td>
                   <td className="py-1.5 text-center">{item.quantity}</td>
                   <td className="py-1.5 text-right">{Number(item.unitPrice).toFixed(2)}</td>
@@ -151,7 +148,7 @@ export function ReceiptPrintView({ sale, onClose }: PrintReceiptProps) {
 
         {/* Financial Calculation Totals */}
         <div className="space-y-1.5 pb-3 border-b border-dashed border-slate-300 text-[11px]">
-          {Number(sale.discountAmount || 0) > 0 && (
+          {Number(sale.discountAmount) > 0 && (
             <div className="flex justify-between text-emerald-600">
               <span>Discount Applied:</span>
               <span>-{currencySymbol}{Number(sale.discountAmount).toFixed(2)}</span>

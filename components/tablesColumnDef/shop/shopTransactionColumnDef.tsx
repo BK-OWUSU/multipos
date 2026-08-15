@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import CurrencyFormatter from "@/components/reusables/CurrencyFormter";
 import {formatStandardDateTime } from "@/lib/utils";
 import { toast } from "sonner";
-import { verifyOnlinePayment } from "@/lib/actions/business/sale-actions";
+// import { verifyOnlinePayment } from "@/lib/actions/business/sale-actions";
 import { useSaleStore } from "@/store/saleStore";
 
 export const shopTransactionColumnDef: ColumnDef<Sale>[] = [
@@ -354,7 +354,17 @@ const ActionCell = ({ row, table }: ActionCellProps) => {
           View Details
         </DropdownMenuItem>
         
-        <DropdownMenuItem>Print Receipt</DropdownMenuItem>
+        {sale.status === "COMPLETED" && (
+        <DropdownMenuItem
+         onClick={() => {
+            const meta = table.options.meta as { onPrintReceipt?: (sale: Sale) => void } | undefined;
+            if (meta?.onPrintReceipt) {
+              meta.onPrintReceipt(sale);
+            }
+          }}
+        >Print Receipt
+        </DropdownMenuItem>)
+        }
         
         {statusIsPending && (
           <DropdownMenuItem

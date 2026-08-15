@@ -10,7 +10,8 @@ import {
   FileSpreadsheet, 
   Download,
   ChevronDown,
-  FileText
+  FileText,
+  X
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -26,12 +27,15 @@ import TableMain from "@/components/reusables/table/TableMain";
 import CurrencyFormatter from "@/components/reusables/CurrencyFormter";
 import { useSaleStore } from "@/store/saleStore";
 import { Sale } from "@/types/sale.type";
-import { saleTransactionsColumnDef } from "@/components/tablesColumnDef/business/sales-transactions/SalesColumnDef";
+import { SalesTableMeta, saleTransactionsColumnDef } from "@/components/tablesColumnDef/business/sales-transactions/SalesColumnDef";
 import { AppSheet } from "@/components/reusables/AppSheet";
 import SaleDetailsDrawer from "@/components/detials-components/SaleDetailsDrawer";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { exportToExcel, exportToPDF } from "@/lib/exports/exportUtils";
 import { toast } from "sonner";
+import { SaleReceipt } from "@/types/types/sale.receipt.type";
+import { ReceiptPrintView } from "@/components/print-component/ReceiptPrintViewComponent";
+import { getSaleByIdAction } from "@/lib/actions/business/sale-actions";
 
 export default function SalesManagementView() {
   const { sales, fetchSales, loading } = useSaleStore();
@@ -42,7 +46,8 @@ export default function SalesManagementView() {
   const [period, setPeriod] = useState<string>("current-week");
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
-
+  const [isFetchingReceipt, setIsFetchingReceipt] = useState(false);
+  const [selectedSaleReceipt, setSelectedSaleReceipt] = useState<SaleReceipt | null>(null);
   const [isExporting, startExportTransition] = useTransition();
 
   // Fetch sales on mount or filter changes if store supports parameters
@@ -345,15 +350,25 @@ const handleExport = (type: "excel" | "pdf") => {
               return customerMatch || invoiceMatch || rootCustomId || paymentType;
             }}
             meta={{
-              onViewSaleDetails: (sale: Sale) => {
-                setSelectedSale(sale);
-                setIsDetailsOpen(true);
-              },
               onViewSale: (sale: Sale) => {
                 setSelectedSale(sale);
                 setIsDetailsOpen(true);
-              }
-            }}
+              },
+              onPrintReceipt: async (sale: Sale) => {
+                 try {
+                   setIsFetchingReceipt(true);
+                   const response = await getSaleByIdAction(sale.id);
+                   if (response.success) {
+                     const saleData = response.data
+                     setSelectedSaleReceipt(saleData as SaleReceipt);
+                   }
+                 } catch (error) {
+                   console.error("Failed to load receipt details:", error);
+                 } finally {
+                   setIsFetchingReceipt(false);
+                 }
+             } 
+            } as SalesTableMeta}
           />
         </div>
       </Card>
@@ -370,6 +385,48 @@ const handleExport = (type: "excel" | "pdf") => {
           />
         )}  
       </AppSheet>
+
+       {/* ── RECEIPT MODAL POPUP ── */}
+       {selectedSaleReceipt && (
+         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+           <div className="bg-white rounded-2xl max-w-sm w-full p-4 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+             <div className="flex justify-between items-center pb-3 border-b border-slate-100 mb-3">
+               <h3 className="text-sm font-bold text-slate-900">Transaction Receipt</h3>
+               <button 
+                 onClick={() => setSelectedSaleReceipt(null)}
+                 className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+               >
+                 <X className="h-4 w-4" />
+               </button>
+             </div>
+      
+             <ReceiptPrintView sale={selectedSaleReceipt} onClose={() => setSelectedSaleReceipt(null)} />
+             
+             <div className="space-y-4 py-2">
+               <p className="text-xs text-slate-500 text-center">
+                 Receipt ready for print or download for Sale ID:{" "}
+                 <span className="font-mono font-bold text-slate-800">{selectedSaleReceipt.customId}</span>
+               </p>
+               
+               <div className="flex gap-2">
+                 <Button 
+                   onClick={() => window.print()}
+                   className="flex-1 bg-blue-900 hover:bg-blue-800 text-white text-xs font-bold"
+                 >
+                   Print Receipt
+                 </Button>
+                 <Button 
+                   variant="outline"
+                   onClick={() => setSelectedSaleReceipt(null)}
+                   className="flex-1 text-xs"
+                 >
+                   Close
+                 </Button>
+               </div>
+             </div>
+           </div>
+         </div>
+       )}  
 
     </div>
   );
