@@ -405,7 +405,7 @@ static async updateCustomer(
   customerId: string, 
   businessId: string, 
   userId: string,
-  ipAddress: string
+  ipAddress?: string
 ) {
   try {
     const updatedCustomer = await prisma.$transaction(async (tx) => {
