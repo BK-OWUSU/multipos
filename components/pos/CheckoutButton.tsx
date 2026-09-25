@@ -10,10 +10,11 @@ import { SaleReceipt } from "@/types/types/sale.receipt.type";
 interface CheckoutButtonProps {
   checkoutPayload: POSCheckoutInput;
   onSuccess: (saleId: string, saleData?: SaleReceipt) => void;
+  onRollback?: () => void; 
   disabled?: boolean;
 }
 
-export default function CheckoutButton({ checkoutPayload, onSuccess, disabled }: CheckoutButtonProps) {
+export default function CheckoutButton({ checkoutPayload, onSuccess, onRollback, disabled }: CheckoutButtonProps) {
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Endpoint helper to wipe or void the stale transaction record 
@@ -114,6 +115,7 @@ export default function CheckoutButton({ checkoutPayload, onSuccess, disabled }:
                 
                 if (success) {
                   toast.success("Order cleared. You can safely modify the cart or try again.");
+                  if (onRollback) onRollback();
                 } else {
                   toast.error("Failed to clean up the order. Please check your transaction history.");
                 }

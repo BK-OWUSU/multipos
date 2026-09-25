@@ -4,13 +4,13 @@ import { revalidatePath } from "next/cache";
 import { getSession, updateSessionPayload } from "@/lib/auths-functions";
 import { AppResponse } from "@/types/auth/auth";
 import { getRequestMeta } from "@/lib/getRequestMeta";
-import { CreateRoleInput, UpdateRoleInput } from "@/types/role.schema";
+import { CreateRoleFormValues, UpdateRoleInput } from "@/types/role.schema";
 import { RoleService } from "@/lib/services/auth/role-service";
 import { Role } from "@/generated/prisma/client";
 
 
 
-export async function createRoleAction(payload: CreateRoleInput) {
+export async function createRoleAction(payload: CreateRoleFormValues) {
     
     const session = await getSession();
     // 1. Check Session

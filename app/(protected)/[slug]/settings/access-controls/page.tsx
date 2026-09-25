@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Download, Plus, ShieldCheck, ArrowLeft } from "lucide-react";
+import { Download, Plus, ShieldCheck } from "lucide-react";
 import RolesList from "./RolesList";
 import RoleDetails from "./RoleDetails";
 import RolePermissions from "./RolePermissions";
@@ -10,12 +10,11 @@ import RoleAccess from "./RoleAccess";
 import RoleUsers from "./RoleUsers";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GenericModal } from "@/components/reusables/GenericModal";
-import CreateRoleForm from "./CreateRoleForm"; 
 import { useRoleStore } from "@/store/rolesStore";
-import { RolesWithRelations } from "@/types/auth/role.type";
 import { accessRoutesFilteredValues, getRolePermissionsForForm } from "@/lib/accessPermissionSecurity";
-import { Badge } from "@/components/ui/badge";
 import { getAllAccessKeys, getAllPermissions } from "@/lib/accessAndPermissionsDef";
+import CreateRolesForm from "./CreateRolesForm";
+import RoleHeader from "./RoleHeader";
 
 export default function AccessControlsPage() {
   const { fetchRoles, roles } = useRoleStore();
@@ -42,11 +41,12 @@ export default function AccessControlsPage() {
           <div className="flex items-center gap-2 sm:gap-3 self-end sm:self-auto">
             <Button variant="outline" size="sm" className="h-9 text-xs border-blue-800 text-blue-900 bg-white hover:bg-blue-50">
               <Download className="h-3.5 w-3.5 mr-2 text-blue-700" />
-              Export Roles
+               Export Roles
             </Button>
             
             <GenericModal
               header="Create New Role"
+              width="sm:max-w-max"
               description="Define a new role with specific permissions and access controls"
               isOpen={isCreateModalOpen}
               onOpenChange={setIsCreateModalOpen}
@@ -57,7 +57,12 @@ export default function AccessControlsPage() {
                 </Button>
               }
             >
-              <CreateRoleForm onSuccess={() => setIsCreateModalOpen(false)} />
+              <CreateRolesForm
+                onSuccess={() =>{
+                  fetchRoles()
+                  setIsCreateModalOpen(false)
+                }} 
+              />
             </GenericModal>
           </div>
         </div>
@@ -123,6 +128,7 @@ export default function AccessControlsPage() {
 
                 <TabsContent value="access" className="m-0 p-0 h-full overflow-y-auto">
                   <RoleAccess
+                    key = {selectedRoleId ?? "new-role"} 
                     role={selectedRole}
                     initialAccessRoutes={accessRoutesFilteredValues(selectedRole.access) || []}
                     onSuccess = {()=> {
@@ -132,7 +138,8 @@ export default function AccessControlsPage() {
                 </TabsContent>
 
                 <TabsContent value="permissions" className="m-0 p-4 sm:p-6 h-full overflow-y-auto">
-                  <RolePermissions 
+                  <RolePermissions
+                   key = {selectedRoleId} 
                    role={selectedRole}
                    onSuccess={()=> {
                     fetchRoles()
@@ -158,64 +165,6 @@ export default function AccessControlsPage() {
             </div>
           )}
         </div>
-      </div>
-    </div>
-  );
-}
-
-interface RoleHeaderProps {
-  role: RolesWithRelations;
-  onBack: () => void;
-}
-
-function RoleHeader({ role, onBack }: RoleHeaderProps) {
-  return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-center gap-3 min-w-0">
-        {/* Mobile View Toggle Left Arrow Arrow Button */}
-        <Button 
-          variant="outline" 
-          size="icon" 
-          className="h-8 w-8 shrink-0 lg:hidden border-blue-800 text-blue-900" 
-          onClick={onBack}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-
-        <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-blue-700/10 border border-blue-700/20 flex items-center justify-center shrink-0">
-          <ShieldCheck className="h-5 w-5 text-blue-900" />
-        </div>
-        
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="text-sm sm:text-base font-bold text-blue-950 truncate tracking-tight">{role?.name}</h2>
-            <Badge 
-              variant="outline" 
-              className={`text-[10px] font-bold px-2 py-0.5 rounded-md shrink-0 border-transparent ${
-                role?.type === "SYSTEM" 
-                  ? "bg-emerald-50 text-emerald-700"
-                  : role?.type === "CUSTOM" 
-                    ? "bg-amber-50 text-amber-700" 
-                    : "bg-blue-50 text-blue-900"
-              }`}
-            >
-              {role?.type}
-            </Badge>
-          </div>
-          <p className="text-xs text-blue-800/70 truncate mt-0.5 font-medium">
-            {role?.description || `${role?.name.toLowerCase()} configuration settings context`}
-          </p>
-        </div>
-      </div>
-      
-      {/* Context Actions */}
-      <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-        <Button variant="outline" size="sm" className="h-8 text-xs font-semibold border-blue-800 text-blue-900 hover:bg-blue-50 px-3">
-          Edit
-        </Button>
-        <Button variant="outline" size="sm" className="h-8 text-xs font-semibold text-rose-700 border-rose-200 hover:text-rose-800 hover:bg-rose-50 px-3">
-          Delete
-        </Button>
       </div>
     </div>
   );

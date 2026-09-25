@@ -21,7 +21,6 @@ import { RolesWithRelations } from "@/types/auth/role.type";
 import { accessLength, permissionLength } from "@/lib/accessPermissionSecurity";
 
 export default function RoleDetails({ role }: { role: RolesWithRelations | null }) {
-  console.log(role)
   // Guard against unselected or null role profiles
   if (!role) {
     return (

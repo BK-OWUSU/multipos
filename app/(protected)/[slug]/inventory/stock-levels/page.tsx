@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Package, Layers, TrendingUp, AlertTriangle, AlertCircle, RefreshCw, Upload, Download} from "lucide-react";
 import { useInventoryStore } from "@/store/shop-inventory.store";
@@ -17,8 +16,13 @@ import GenericExcelBulkImport from "@/components/reusables/GenericExcelBulkImpor
 import { shopRestockConfig } from "@/lib/configs/shop-restock-config";
 import CustomButton from "@/components/reusables/CustomButton";
 import { downloadShopInventoryExcel } from "@/lib/bulk-import/export-shop-inventory";
+import { Can } from "@/components/reusables/security/Can";
+import { PERMISSIONS } from "@/lib/accessAndPermissionsDef";
+import { useAuthStore } from "@/store/useAuthStore";
+import { hasPermission } from "@/lib/accessPermissionSecurity";
 
 export default function InventoryRestockView() {
+  const user = useAuthStore((state) => state.user);
   const { inventoryItems, meta, isLoading, fetchInventory } = useInventoryStore();
   const { fetchShops, shops } = useShopStore();
   const [pageSize, setPageSize] = useState(100);
@@ -65,112 +69,114 @@ export default function InventoryRestockView() {
         <div>
           <div className="flex items-center gap-3">
           {/* Trigger to open Bulk Restock Modal */}
-          <GenericModal
-            width={modalWidth}
-            header="Bulk Excel Restock"
-            description="Select a shop, download its stock items, update quantities, and upload back."
-            isOpen={isBulkRestockModalOpen}
-            onOpenChange={() => {
-              setIsBulkRestockModalOpen((prev) => !prev);
-              setModalWidth("sm:max-w-137.5");
-            }}
-            triggerBtn={
-              <CustomButton
-              icon={<Upload className="mr-2 h-4 w-4" />}
-              text="Bulk Restock"
-              customVariant="primary"
-              />
-            }
-          >
-            {!selectedShopIdForRestock ? (
-              <div className="space-y-4 py-2">
-                <label className="text-sm font-medium text-slate-700 block">
-                  Select Target Shop for Bulk Restock
-                </label>
-                <select
-                  className="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white focus:outline-blue-600"
-                  value={selectedShopIdForRestock}
-                  onChange={(e) => setSelectedShopIdForRestock(e.target.value)}
-                >
-                  <option value="">-- Choose a shop --</option>
-                  {shops.map((shop) => (
-                    <option key={shop.id} value={shop.id}>
-                      {shop.name}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-slate-500">
-                  You must pick a specific shop branch to download and push inventory stock adjustments.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border">
-                  <div>
-                    <span className="text-xs text-slate-400 block">Selected Branch</span>
-                    <span className="text-sm font-bold text-slate-800">{activeShopForRestock?.name}</span>
-                  </div>
-                  <button
-                    onClick={() => setSelectedShopIdForRestock("")}
-                    className="text-xs text-blue-600 font-semibold hover:underline"
+          <Can permission={PERMISSIONS.inventory.ADJUST}>
+            <GenericModal
+              width={modalWidth}
+              header="Bulk Excel Restock"
+              description="Select a shop, download its stock items, update quantities, and upload back."
+              isOpen={isBulkRestockModalOpen}
+              onOpenChange={() => {
+                setIsBulkRestockModalOpen((prev) => !prev);
+                setModalWidth("sm:max-w-137.5");
+              }}
+              triggerBtn={
+                <CustomButton
+                icon={<Upload className="mr-2 h-4 w-4" />}
+                text="Bulk Restock"
+                customVariant="primary"
+                />
+              }
+            >
+              {!selectedShopIdForRestock ? (
+                <div className="space-y-4 py-2">
+                  <label className="text-sm font-medium text-slate-700 block">
+                    Select Target Shop for Bulk Restock
+                  </label>
+                  <select
+                    className="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white focus:outline-blue-600"
+                    value={selectedShopIdForRestock}
+                    onChange={(e) => setSelectedShopIdForRestock(e.target.value)}
                   >
-                    Change Shop
-                  </button>
+                    <option value="">-- Choose a shop --</option>
+                    {shops.map((shop) => (
+                      <option key={shop.id} value={shop.id}>
+                        {shop.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-slate-500">
+                    You must pick a specific shop branch to download and push inventory stock adjustments.
+                  </p>
                 </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border">
+                    <div>
+                      <span className="text-xs text-slate-400 block">Selected Branch</span>
+                      <span className="text-sm font-bold text-slate-800">{activeShopForRestock?.name}</span>
+                    </div>
+                    <button
+                      onClick={() => setSelectedShopIdForRestock("")}
+                      className="text-xs text-blue-600 font-semibold hover:underline"
+                    >
+                      Change Shop
+                    </button>
+                  </div>
 
-                {/* Step 1: Download Template Actions */}
-                <div className="grid grid-cols-2 gap-3">
-                  <CustomButton
-                    text="Download Low Stock"
-                    customVariant="primary"
-                    icon={<Download className="mr-2 h-4 w-4" />}
-                    onClick={() =>
-                      downloadShopInventoryExcel(
-                        inventoryItems || [],
-                        selectedShopIdForRestock,
-                        activeShopForRestock?.name || "Shop",
-                        true
-                      )
-                    }
-                  />
-                  <CustomButton
-                    text="Download All Stock"
-                    customVariant="primary"
-                    icon={<Download className="mr-2 h-4 w-4" />}
-                    onClick={() =>
-                      downloadShopInventoryExcel(
-                        inventoryItems || [],
-                        selectedShopIdForRestock,
-                        activeShopForRestock?.name || "Shop",
-                        false
-                      )
-                    }
-                  />
-                </div>
+                  {/* Step 1: Download Template Actions */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <CustomButton
+                      text="Download Low Stock"
+                      customVariant="primary"
+                      icon={<Download className="mr-2 h-4 w-4" />}
+                      onClick={() =>
+                        downloadShopInventoryExcel(
+                          inventoryItems || [],
+                          selectedShopIdForRestock,
+                          activeShopForRestock?.name || "Shop",
+                          true
+                        )
+                      }
+                    />
+                    <CustomButton
+                      text="Download All Stock"
+                      customVariant="primary"
+                      icon={<Download className="mr-2 h-4 w-4" />}
+                      onClick={() =>
+                        downloadShopInventoryExcel(
+                          inventoryItems || [],
+                          selectedShopIdForRestock,
+                          activeShopForRestock?.name || "Shop",
+                          false
+                        )
+                      }
+                    />
+                  </div>
 
-                <div className="border-t pt-4">
-                  <GenericExcelBulkImport
-                    config={shopRestockConfig}
-                    additionalPayload={{ shopId: selectedShopIdForRestock }}
-                    onSuccess={() => {
-                      setIsBulkRestockModalOpen(false);
-                      setSelectedShopIdForRestock("");
-                      fetchInventory({ limit: pageSize });
-                      setModalWidth("sm:max-w-137.5");
-                    }}
-                    onCancel={() => {
-                      setIsBulkRestockModalOpen(false);
-                      setSelectedShopIdForRestock("");
-                      setModalWidth("sm:max-w-137.5");
-                    }}
-                    onImportParsedSuccess={() => {
-                      setModalWidth("sm:max-w-max");
-                    }}
-                  />
+                  <div className="border-t pt-4">
+                    <GenericExcelBulkImport
+                      config={shopRestockConfig}
+                      additionalPayload={{ shopId: selectedShopIdForRestock }}
+                      onSuccess={() => {
+                        setIsBulkRestockModalOpen(false);
+                        setSelectedShopIdForRestock("");
+                        fetchInventory({ limit: pageSize });
+                        setModalWidth("sm:max-w-137.5");
+                      }}
+                      onCancel={() => {
+                        setIsBulkRestockModalOpen(false);
+                        setSelectedShopIdForRestock("");
+                        setModalWidth("sm:max-w-137.5");
+                      }}
+                      onImportParsedSuccess={() => {
+                        setModalWidth("sm:max-w-max");
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
-          </GenericModal>
+              )}
+            </GenericModal>
+          </Can>
         </div>
         </div>
       </div>
@@ -257,7 +263,7 @@ export default function InventoryRestockView() {
                 onPageSizeChange={(size) => setPageSize(size)}
                 columnVisibilityFilter={true}
                 tableFilterButtonVisible={true}
-                tableExportButtonVisible={true}
+                tableExportButtonVisible={hasPermission(user, PERMISSIONS.inventory.EXPORT)}
                 searchKey="product name"
 
                 meta = {{
@@ -274,16 +280,16 @@ export default function InventoryRestockView() {
             </div>
       </Card>
 
-
-    <AppSheet
-        isOpen={isUpdateStockFormOpen}
-        onClose={() => setIsUpdateStockFormOpen(false)}
-        title="Update Stock"
-        description="Update stock levels and unit costs for existing inventory items."
-        maxWidth="lg"
-      >
-    {selectedInventoryItem && (
-      <UpdateStockForm
+    <Can permission={PERMISSIONS.inventory.ADJUST}>
+      <AppSheet
+          isOpen={isUpdateStockFormOpen}
+          onClose={() => setIsUpdateStockFormOpen(false)}
+          title="Update Stock"
+          description="Update stock levels and unit costs for existing inventory items."
+          maxWidth="lg"
+          >
+      {selectedInventoryItem && (
+        <UpdateStockForm
         inventoryItem={selectedInventoryItem} 
         shops={shops}
         onSuccess={() => {
@@ -295,30 +301,34 @@ export default function InventoryRestockView() {
           setIsUpdateStockFormOpen(false);
           setSelectedInventoryItem(null);
         }}
-      />
-    )}  
-  </AppSheet>    
-<AppSheet
-  isOpen={isViewStockItemOpen}
-  onClose={() => setIsViewStockItemOpen(false)}
-  title="Stock Level Details"
-  description="View real-time item quantities, warehouse locations, expiration tracking, and multi-shop breakdowns."
-  maxWidth="lg"
->
-  {selectedInventoryItem && (
-    <InventoryDetailView
-      inventoryItem={selectedInventoryItem}
-      onClose={() => {
-        setIsViewStockItemOpen(false);
-        setSelectedInventoryItem(null);
-      }}
-      onEdit={()=> {
-        setIsUpdateStockFormOpen(true);
-         setIsViewStockItemOpen(false);
-      }}
-    />
-  )}  
-</AppSheet>
-  </div>
+        />
+      )}  
+    </AppSheet>   
+  </Can>
+
+  <Can permission={PERMISSIONS.inventory.VIEW}>
+    <AppSheet
+      isOpen={isViewStockItemOpen}
+      onClose={() => setIsViewStockItemOpen(false)}
+      title="Stock Level Details"
+      description="View real-time item quantities, warehouse locations, expiration tracking, and multi-shop breakdowns."
+      maxWidth="lg"
+    >
+      {selectedInventoryItem && (
+        <InventoryDetailView
+          inventoryItem={selectedInventoryItem}
+          onClose={() => {
+            setIsViewStockItemOpen(false);
+            setSelectedInventoryItem(null);
+          }}
+          onEdit={()=> {
+            setIsUpdateStockFormOpen(true);
+            setIsViewStockItemOpen(false);
+          }}
+        />
+      )}  
+    </AppSheet>
+    </Can>
+      </div>
   );
 }

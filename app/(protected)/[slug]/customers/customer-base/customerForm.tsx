@@ -1,19 +1,20 @@
 // components/customers/CustomerForm.tsx
 "use client";
 
-import { useForm, FormProvider, Controller } from "react-hook-form";
+import { useForm, FormProvider, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormInput } from "@/components/reusables/inputs/FormInput";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { Plus, Save, UserPlus } from "lucide-react";
+import { Save, UserPlus } from "lucide-react";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useTransition } from "react";
 import CustomButton from "@/components/reusables/CustomButton";
 // import { useCustomerStore } from "@/store/customerStore";
-import { AppResponse, Customer } from "@/types/auth/auth";
+import { Customer } from "@/types/auth/auth";
 import { createCustomerSchema ,CreateCustomerSchema} from "@/types/schema/auth.schema";
+import { createSingleCustomerAction, updateSingleCustomerAction } from "@/lib/actions/business/customer-actions";
 
 interface CustomerFormProps {
   initialData?: Customer;
@@ -30,6 +31,7 @@ export default function CustomerForm({
 }: CustomerFormProps) {
   const isEditing = !!initialData;
   // const { createCustomer, updateCustomer } = useCustomerStore();
+  const [isPending, startTransition] = useTransition();
 
   const methods = useForm<CreateCustomerSchema>({
     resolver: zodResolver(createCustomerSchema),
@@ -45,10 +47,11 @@ export default function CustomerForm({
     },
   });
 
-  const { formState: { isSubmitting }, control, handleSubmit, setValue, reset, watch } = methods;
+  const { formState: { isSubmitting }, control, handleSubmit,  reset } = methods;
 
   // Watch isCreditCustomer to show/hide credit limit
-  const isCreditCustomer = watch("isCreditCustomer");
+  // const isCreditCustomer = watch("isCreditCustomer");
+  const isCreditCustomer = useWatch({control, name: "isCreditCustomer",});
 
   // Sync form values if initialData changes
   useEffect(() => {
@@ -80,21 +83,52 @@ export default function CustomerForm({
         creditLimit: data.isCreditCustomer ? data.creditLimit : 0,
       };
 
-      let response: AppResponse;
 
-      // if (isEditing && initialData) {
-      //   response = await updateCustomer(initialData.id, payload) as AppResponse;
-      // } else {
-      //   response = await createCustomer(payload) as AppResponse;
-      // }
+      if (isEditing && initialData) {
 
-      // if (response.success) {
-      //   toast.success(response.message || `Customer ${isEditing ? 'updated' : 'added'} successfully!`);
-      //   if (onSuccess) onSuccess();
-      //   if (!isEditing) reset();
-      // } else {
-      //   toast.error(response.error || "Operation failed");
-      // }
+        // Updating Customer Details
+        startTransition(() => {      
+          toast.promise(
+            async () => {
+              const res = await updateSingleCustomerAction(initialData.id, payload);
+              if (!res.success) {
+                throw new Error(res.error || "Failed to update customer info");
+              }
+              return res;
+            }, 
+            {
+              loading: "Updating customer info...",
+              success: (res) => {
+                if (onSuccess) onSuccess();
+                return res.message || "Customer updated successfully!";
+              },
+              error: (err) => err.message || "Error updating customer",
+            }
+          );
+        });
+      } else {
+
+        // Saving customer data using the action function
+        startTransition(() => {      
+          toast.promise(
+            async () => {
+              const res = await createSingleCustomerAction(payload);
+              if (!res.success) {
+                throw new Error(res.error || "Failed to create customer");
+              }
+              return res;
+            }, 
+            {
+              loading: "Creating customer...",
+              success: (res) => {
+                if (onSuccess) onSuccess();
+                return res.message || "Customer created successfully!";
+              },
+              error: (err) => err.message || "Error creating customer",
+            }
+          );
+        });
+      }
     } catch (error) {
       toast.error("An unexpected error occurred");
       console.error("Customer Form Error: ", error);
@@ -198,7 +232,7 @@ export default function CustomerForm({
             className="flex-1"
             customVariant="primary"
             icon={isEditing ? <Save className="mr-2 h-4 w-4" /> : <UserPlus className="mr-2 h-4 w-4" />}
-            isLoading={isSubmitting}
+            isLoading={isPending || isSubmitting}
           />
         </div>
       </form>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useTransition } from "react";
+import { useState, useMemo, useTransition, useEffect } from "react";
 import { RolesWithRelations } from "@/types/auth/role.type";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -45,7 +45,7 @@ interface DynamicPermissionGroup {
   items: ParsedPermissionItem[];
 }
 
-const CATEGORY_UI_MAP: Record<string, { label: string; icon: LucideIcon }> = {
+export const CATEGORY_UI_MAP: Record<string, { label: string; icon: LucideIcon }> = {
   dashboard: { label: "Control Dashboard", icon: LayoutDashboard },
   business: { label: "Business Management", icon: Settings },
   shop: { label: "Branch & Shop Operations", icon: Store },
@@ -58,8 +58,25 @@ const CATEGORY_UI_MAP: Record<string, { label: string; icon: LucideIcon }> = {
 
 export default function RolePermissions({ role, initialPermissions = [], onSuccess }: RolePermissionsProps) {
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [selectedPermissions, setSelectedPermissions] = useState<string[]>(initialPermissions);
-const [isPending, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
+  
+  // 1. Compute all possible system permissions first
+  const allSystemPermissions = useMemo(() => getAllPermissions, []);
+  
+  // 2. Resolve initial permissions (expanding "*" if present)
+  const resolvedInitialPermissions = useMemo(() => {
+    if (initialPermissions.includes("*")) {
+      return allSystemPermissions;
+    }
+    return initialPermissions;
+  }, [initialPermissions, allSystemPermissions]);
+  
+  // 3. Keep local state synchronized with the incoming role's permissions
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>(resolvedInitialPermissions);
+
+  useEffect(() => {
+    setSelectedPermissions(resolvedInitialPermissions);
+  }, [resolvedInitialPermissions]);
 
   const dynamicPermissionGroups = useMemo<DynamicPermissionGroup[]>(() => {
     const systemSourceKeys: string[] = getAllPermissions;
@@ -100,7 +117,6 @@ const [isPending, startTransition] = useTransition();
     );
   };
 
-  // ── NEW MATRIX CONTROLS ───────────────────────────────────────────
   const selectAllPermissions = (): void => {
     setSelectedPermissions(getAllPermissions);
   };
@@ -109,41 +125,37 @@ const [isPending, startTransition] = useTransition();
     setSelectedPermissions([]);
   };
 
-
   const handleSavePermissions = async (): Promise<void> => {
-  if (!role) return;
-  const cleanedRoutes = permissionRouteCleaner(selectedPermissions);
-  
-  // Clean payload matching your UpdateRoleInput type definitions
-  const payload: UpdateRoleInput = {
-    name: role.name,
-    permissions: cleanedRoutes,
-  };
+    if (!role) return;
+    const cleanedRoutes = permissionRouteCleaner(selectedPermissions);
+    
+    const payload: UpdateRoleInput = {
+      name: role.name,
+      permissions: cleanedRoutes,
+    };
 
-  startTransition(() => {      
-    toast.promise(
-      async () => {
-        // Execute your Server Action
-        const res = await updateRoleAction(role.id, payload);
-        if (!res.success) {
-          throw new Error(res.error || "Error updating role");
+    startTransition(() => {      
+      toast.promise(
+        async () => {
+          const res = await updateRoleAction(role.id, payload);
+          if (!res.success) {
+            throw new Error(res.error || "Error updating role");
+          }
+          return res;
+        }, 
+        {
+          loading: "Updating role permissions...",
+          success: (res) => {
+            if (onSuccess) onSuccess();
+            return res.message || "Role permissions updated successfully";
+          },
+          error: (err) => {
+            return err.message || "Error updating role permissions";
+          }
         }
-        return res;
-      }, 
-      {
-        loading: "Updating role permissions...", // Corrected placeholder text
-        success: (res) => {
-          // Trigger the parent component callback to refresh the state or re-fetch
-          if (onSuccess) onSuccess();
-          return res.message || "Role permissions updated successfully";
-        },
-        error: (err) => {
-          return err.message || "Error updating role permissions";
-        }
-      }
-    );
-  });
-};
+      );
+    });
+  };
 
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-5xl mx-auto animate-in fade-in duration-300">
@@ -159,7 +171,6 @@ const [isPending, startTransition] = useTransition();
           </p>
         </div>
 
-        {/* Dynamic Global Matrix Utility Controls */}
         <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
           <Button
             type="button"
@@ -268,7 +279,7 @@ const [isPending, startTransition] = useTransition();
             onClick={() => setSelectedPermissions(initialPermissions)}
             disabled={isPending}
           >
-          <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Revert Changes
+            <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Revert Changes
           </Button>
           <Button 
             type="button" 

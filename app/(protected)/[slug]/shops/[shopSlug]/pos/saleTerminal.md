@@ -76,15 +76,7 @@ export default function SaleTerminalPage() {
   const [selectedDiscount, setSelectedDiscount] = useState<Discount | null>(null);
   const [isDiscountDropdownOpen, setIsDiscountDropdownOpen] = useState(false);
 
-  const selectedProduct = useMemo(() => {
-    if (!PRODUCTS || PRODUCTS.length === 0) return null;
-    if (activeProduct) {
-      return PRODUCTS.find((p) => p.id === activeProduct.id) || PRODUCTS[0];
-    }
-    return PRODUCTS[0];
-  }, [PRODUCTS, activeProduct]);
-  
-
+  const selectedProduct = activeProduct || (PRODUCTS && PRODUCTS.length > 0 ? PRODUCTS[0] : null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const customerDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -303,16 +295,6 @@ const currentCheckoutPayload = useMemo<POSCheckoutInput>(() => {
     fetchNotifications();
   };
 
-  const handleSaleRollback = () => {
-    handleClearCart();          // Clears active cart and discounts
-    setCashPaid(0);             // Resets cash input state
-    setMomoPaid(0);             // Resets MoMo input state
-    setSelectedCustomer(null);  // Resets customer selection back to walk-in
-    setPaymentMethod("CASH");   // Reverts payment method back to default
-    fetchProductsVariantByShop(); // Refreshes variant list and synced quantities from database
-    fetchNotifications();       // Syncs notification state if required
-  }
-
   return (
     <div className="flex gap-2 rounded-md sticky top-2 flex-col h-screen w-full text-slate-800 antialiased overflow-hidden">
       
@@ -377,42 +359,36 @@ const currentCheckoutPayload = useMemo<POSCheckoutInput>(() => {
           {/* Dynamic Grid Mapping DB Products */}
           <div className="flex-1 overflow-y-auto pr-1 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 p-4 min-h-87.5">
             {sortedProducts && sortedProducts.length > 0 ? (
-              sortedProducts.map((prod) => {
-                // Calculate remaining stock based on items currently in the cart
-                const cartItem = cart.find((item) => item.product.id === prod.id);
-                const availableStock = prod.stock - (cartItem ? cartItem.quantity : 0);
-
-                return (
-                    <div 
-                      key={prod.id}
-                      onClick={() => setActiveProduct(prod)}
-                      className={`bg-white border max-h-64 rounded-xl p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer relative group ${
-                        selectedProduct?.id === prod.id ? "ring-2 ring-blue-950 border-transparent" : "border-slate-200"
-                      }`}
-                    >
-                       <span className={`absolute top-2 right-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10 ${
-                            availableStock <= (prod.lowStockAlert || 0) ? "bg-orange-100 text-orange-700" : "bg-green-100 text-green-700"
-                          }`}>
-                         {availableStock}
-                      </span>
-                      <div className="bg-slate-50 rounded-lg aspect-square w-full mb-3 flex items-center justify-center overflow-hidden border border-slate-100 relative">
-                        <Image
-                          src={prod.imageUrl || "/imgs/no-product-image.png"}
-                          alt={prod.displayName || "Product Graphic UI"}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <h4 className="text-sm font-semibold text-slate-800 line-clamp-1">{prod.displayName}</h4>
-                        <p className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">SKU: {prod.sku}</p>
-                        <div className="pt-1 flex flex-col">
-                          <span className="text-sm font-bold text-slate-900">{<CurrencyFormatter amount = {prod.costPrice || 0} />}</span>
-                        </div>
-                      </div>
+              sortedProducts.map((prod) => (
+                <div 
+                  key={prod.id}
+                  onClick={() => setActiveProduct(prod)}
+                  className={`bg-white border max-h-64 rounded-xl p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer relative group ${
+                    selectedProduct?.id === prod.id ? "ring-2 ring-blue-950 border-transparent" : "border-slate-200"
+                  }`}
+                >
+                  <span className={`absolute top-2 right-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10 ${
+                    prod.stock <= (prod.lowStockAlert || 0) ? "bg-orange-100 text-orange-700" : "bg-green-100 text-green-700"
+                  }`}>
+                    {prod.stock}
+                  </span>
+                  <div className="bg-slate-50 rounded-lg aspect-square w-full mb-3 flex items-center justify-center overflow-hidden border border-slate-100 relative">
+                    <Image
+                      src={prod.imageUrl || "/imgs/no-product-image.png"}
+                      alt={prod.displayName || "Product Graphic UI"}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-semibold text-slate-800 line-clamp-1">{prod.displayName}</h4>
+                    <p className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">SKU: {prod.sku}</p>
+                    <div className="pt-1 flex flex-col">
+                      <span className="text-sm font-bold text-slate-900">{<CurrencyFormatter amount = {prod.costPrice || 0} />}</span>
                     </div>
-              )
-              })
+                  </div>
+                </div>
+              ))
             ) : (
               <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
                 <ShoppingCart className="h-7 w-7 text-slate-400 mb-4" />
@@ -739,7 +715,6 @@ const currentCheckoutPayload = useMemo<POSCheckoutInput>(() => {
             <CheckoutButton
               checkoutPayload={currentCheckoutPayload}
               onSuccess={handleSaleSuccess}
-              onRollback={handleSaleRollback}
               disabled={isCheckoutDisabled}
             />
           </div>

@@ -50,18 +50,6 @@ export function accessRoutesFilteredValues(key: string[]): string[] {
     return key.filter(k => routeSet.has(k));
 }
 
-//TODO: Implement a more robust permission system in the future, possibly using a dedicated permissions library or framework.
-// export function permissionFilteredValues(key: string[]): string[] { 
-//     const permissions = getAllPermissions;
-//     // Full access (OWNER / SUPER ADMIN)
-//     if (key.includes("*")) return permissions;
-//     // Create a Set for fast O(1) lookups
-//     const permissionSet = new Set(permissions);
-//     // Return only the keys that exist in the access routes
-//     return key.filter(k => permissionSet.has(k));
-// }
-
-
 
 
 export function getRolePermissionsForForm(rolePermissions: string[]): Permission[] {

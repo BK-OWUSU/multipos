@@ -8,6 +8,8 @@ import { Loader2 } from "lucide-react";
 import React from "react";
 import { restockInventoryAction } from "@/lib/actions/business/shop-inventory-action";
 import { FormattedInventoryRow } from "@/types/types/shopInventory.type";
+import { Can } from "@/components/reusables/security/Can";
+import { PERMISSIONS } from "@/lib/accessAndPermissionsDef";
 
 interface UpdateStockFormProps {
   inventoryItem: FormattedInventoryRow;
@@ -129,16 +131,18 @@ export function UpdateShopStockForm({
         >
           Cancel
         </Button>
-        <Button type="submit" disabled={isPending} className="min-w-27.5">
-          {isPending ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            "Save Changes"
-          )}
-        </Button>
+         <Can permission={PERMISSIONS.inventory.ADJUST}>
+          <Button type="submit" disabled={isPending} className="min-w-27.5">
+            {isPending ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save Changes"
+            )}
+          </Button>
+        </Can>
       </div>
     </form>
   );

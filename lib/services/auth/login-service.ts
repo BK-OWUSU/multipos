@@ -20,12 +20,12 @@ static async login(email: string, password: string, ipAddress?: string, userAgen
         // 1. Find ALL active user instances linked to this email across all businesses
         const users = await prisma.user.findMany({
             where: {
-                isActive: true,
+                // isActive: true,
                 employee: {
                     email: email,
                     isActive: true,
                     isDeleted: false,
-                    hasSystemAccess: true,
+                    // hasSystemAccess: true,
                 }
             },
             include: {
@@ -50,27 +50,56 @@ static async login(email: string, password: string, ipAddress?: string, userAgen
             }
         });
 
+        //FOUND USERS
+        // console.log(users)
         if (users.length === 0) {
-            console.log("STAGE ====>  1")
             return NextResponse.json({ success: false, error: "Invalid email or password" }, { status: 401 });
         }
 
         // 2. Filter for users with the correct password
         const validUsers = [];
+        const revokedUsers = [];
+        const needsPasswordChangeUsers = [];
         for (const user of users) {
             const isValidPassword = await verifyPassword(password, user.password);
             if (isValidPassword) {
                 validUsers.push(user);
             }
+            const revokedUser =  user.isActive === false && user.employee.isActive || user.employee.hasSystemAccess === false;
+            if (revokedUser) {
+                revokedUsers.push(user);
+            }
+            const needsPasswordChange = user.needsPasswordChange;
+            if (needsPasswordChange) {
+                needsPasswordChangeUsers.push(user);
+            }
         }
-        // console.log(users)
-        const u = users[0];
-        const isValidPassword = await verifyPassword(password, u.password);
 
-        console.log("PASS MATCH:  ", isValidPassword)
+        // console.log("VALID USERS: ", validUsers)
+        // console.log("REVOKED USERS: ", revokedUsers)
+        // console.log("NEEDS PASSWORD CHANGE USERS: ", needsPasswordChangeUsers)
+
+
+        if (revokedUsers.length > 0) {
+            return NextResponse.json({ success: false, error: "Access denied. Please contact your administrator." }, { status: 201 });
+        }
+
+        if (needsPasswordChangeUsers.length > 0) {
+            const user = needsPasswordChangeUsers[0];
+            const emp = user.employee;
+            const passwordToken_object = {
+                userId: user.id,
+                email: emp.email,
+                purpose: "password_reset",
+                businessId: emp.businessId
+            }
+            
+            const response = NextResponse.json({ message: "Password change required", success: false, requiresPasswordChange: true, redirectTo: `/${emp.business.slug}/reset-password` },{ status: 201 });
+            setPasswordResetSessionCookie(response, passwordToken_object)
+            return response;
+        }
         
         if (validUsers.length === 0) {
-            console.log("STAGE ====>  2")
             return NextResponse.json({ success: false, error: "Invalid email or password" }, { status: 401 });
         }
         
@@ -107,10 +136,8 @@ static async login(email: string, password: string, ipAddress?: string, userAgen
                 return response;
             }
             
-            console.log("NEED PASSWORD CHANGE")
-            console.log("STAGE ====>  3")
-            console.log(emp)
             // Check if password change is required (e.g., first-time login for staff)
+            console.log("USER: ", user)
             if (user.needsPasswordChange) {
                 const passwordToken_object = {
                     userId: user.id,
@@ -122,6 +149,12 @@ static async login(email: string, password: string, ipAddress?: string, userAgen
                 const response = NextResponse.json({ message: "Password change required", success: false, requiresPasswordChange: true, redirectTo: `/${emp.business.slug}/reset-password` },{ status: 201 });
                 setPasswordResetSessionCookie(response, passwordToken_object)
                 return response;
+            }
+
+            //Check if user has system access
+            if (!emp.hasSystemAccess) {
+                console.log("STAGE ====>  4")
+                return NextResponse.json({ success: false, error: "Access denied. Please contact your administrator." }, { status: 201 });
             }
 
             

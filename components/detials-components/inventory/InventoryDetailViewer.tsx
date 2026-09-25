@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FormattedInventoryRow } from "@/types/types/shopInventory.type";
 import { Package, Store, Tag, DollarSign, Layers, Calendar, AlertTriangle } from "lucide-react";
+import { Can } from "@/components/reusables/security/Can";
+import { PERMISSIONS } from "@/lib/accessAndPermissionsDef";
 
 interface InventoryDetailViewProps {
   inventoryItem: FormattedInventoryRow;
@@ -210,9 +212,11 @@ export function InventoryDetailView({
             </Button>
           )}
           {onEdit && (
-            <Button size="sm" onClick={onEdit}>
-              Edit Inventory
-            </Button>
+             <Can permission={PERMISSIONS.inventory.ADJUST}>
+              <Button size="sm" onClick={onEdit}>
+                Edit Inventory
+              </Button>
+            </Can>
           )}
         </div>
       </div>

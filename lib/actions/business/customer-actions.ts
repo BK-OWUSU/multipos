@@ -13,7 +13,7 @@ import { getRequestMeta } from "@/lib/getRequestMeta";
 
 
 
-export async function createSingleCustomer(data: CreateCustomerSchema) {
+export async function createSingleCustomerAction(data: CreateCustomerSchema) {
     const session = await getSession();
 
     // 1. Check Session
@@ -31,7 +31,39 @@ export async function createSingleCustomer(data: CreateCustomerSchema) {
 
     const response = await CustomerService.createCustomer(data, userId,businessId, businessSlug, ipAddress);
 
-    if (response.success && response.message && response.redirectTo) {
+    if (response.success && response.redirectTo) {
+        revalidatePath(response.redirectTo)
+        return response;
+    }else {
+        return response;
+    } 
+}
+
+export async function updateSingleCustomerAction(customerId: string , data: CreateCustomerSchema) {
+    const session = await getSession();
+
+    // 1. Check Session
+    if(!session || typeof session === "string") {
+        return { 
+            success: false, 
+            error: "Unauthorized session",
+            status: 400
+        } as AppResponse;
+    }
+
+    const { ipAddress } = await getRequestMeta();
+
+    const {businessId, userId, shopId} = session;
+
+    const response = await CustomerService.updateCustomer(
+       {...data, registeredAtShopId: shopId}, 
+        customerId,
+        businessId, 
+        userId,
+        ipAddress
+    );
+
+    if (response.success && response.redirectTo) {
         revalidatePath(response.redirectTo)
         return response;
     }else {

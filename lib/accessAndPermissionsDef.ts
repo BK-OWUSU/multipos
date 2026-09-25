@@ -38,29 +38,29 @@ export const getAllAccessKeys = (): string[] => {
   return Array.from(new Set(keys));
 };
 
-export const ACTIONS = [
-  "view",
-  "create",
-  "update",
-  "delete",
-  "import",
-  "export",
-  "print",
-  "approve",
-  "cancel",
-  "refund",
-  "assign",
-  "transfer",
-  "adjust",
-  "open",
-  "close",
-  "download",
-  "award",
-  "redeem",
-  "receive",
-  "send",
-  "reset-password",
-] as const;
+// export const ACTIONS = [
+//   "view",
+//   "create",
+//   "update",
+//   "delete",
+//   "import",
+//   "export",
+//   "print",
+//   "approve",
+//   "cancel",
+//   "refund",
+//   "assign",
+//   "transfer",
+//   "adjust",
+//   "open",
+//   "close",
+//   "download",
+//   "award",
+//   "redeem",
+//   "receive",
+//   "send",
+//   "reset-password",
+// ] as const;
 
 export const PERMISSIONS = {
   business: {
@@ -87,29 +87,44 @@ export const PERMISSIONS = {
     UPDATE: "category:update",
     DELETE: "category:delete",
   },
+
   brands: {
     VIEW: "brand:view",
     CREATE: "brand:create",
     UPDATE: "brand:update",
     DELETE: "brand:delete",
   },
+
+  inventory: {
+    VIEW: "inventory:view",
+    UPDATE: "inventory:update",
+    ADJUST: "inventory:adjust",
+    TRANSFER: "inventory:transfer",
+    RECEIVE: "inventory:receive",
+    EXPORT: "inventory:export",
+  },
+
+
   sale: {
     VIEW: "sale:view",
     CREATE: "sale:create",
     CANCEL: "sale:cancel",
     REFUND: "sale:refund",
   },
+  
   shops: { // Matched to accessKey: "shops"
     VIEW: "shop:view",
     CREATE: "shop:create",
     UPDATE: "shop:update",
     DELETE: "shop:delete",
   },
+
   invoices: { // Matched to accessKey: "invoices"
     VIEW: "invoice:view",
     PRINT: "invoice:print",
     DOWNLOAD: "invoice:download",
   },
+
   report: {
     VIEW: "report:view",
     EXPORT: "report:export",

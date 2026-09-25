@@ -6,10 +6,10 @@ import hasAccess from "./accessPermissionSecurity";
 import {
   ChartNetwork, Settings, HelpCircle, Users, FileUser, PackageSearch,BanknoteArrowDown,
   LayoutDashboard, HandCoins, ChartColumnStacked, BookUser, Banknote,ShelvingUnit,PlusCircle,
-  Monitor, ArrowRightLeft, FileText, List, Layers, Percent, PackagePlus,Columns3Cog,
-  UserRoundCog, Clock, Hourglass, Contact2, Trophy, ShieldCheck,FileBox,BrickWallShield,
+  Monitor, ArrowRightLeft, FileText, List, Layers, Percent, PackagePlus,
+  UserRoundCog, Clock, Hourglass, Contact2, Trophy, ShieldCheck,BrickWallShield,
   Store, MessageSquare, Globe,Dices,CircleGauge,HousePlus,Combine,Warehouse,Landmark, Bell,
-  NotepadTextDashed
+  NotepadTextDashed,ShoppingBag 
 } from "lucide-react";
 
 // Explicit list of sub-features that require a distinct branch store location parameter context
@@ -153,6 +153,7 @@ export const navConfig = [
     icon: Store,
     items: [
       { title: "Shop Dashboard", accessKey: "shop-dashboard", icon: CircleGauge },
+      { title: "Shop Workspace", accessKey: "/", icon: ShoppingBag },
       { title: "Pos", accessKey: "pos", icon: Monitor },
       { title: "Transactions", accessKey: "transactions", icon: ArrowRightLeft },
       { title: "Time Cards", accessKey: "time-card", icon: Clock },

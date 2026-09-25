@@ -142,21 +142,3 @@ export const customerSearchSchema = z.object({
   shopId: z.string().optional(),
 });
 export type CustomerSearchSchema = z.infer<typeof customerSearchSchema>;
-
-//ROLE SHCEMA
-export const createRoleSchema = z.object({
-  name: z.string().min(2, "Role name must be at least 2 characters").max(100, "Role name too long").trim(),
-  permissions: z.array(z.string()).min(1, "Select at least one permission"),
-  access: z.array(z.string()).min(1, "Select at least one access route"),
-  description: z.string().optional().nullable(),
-  expiresAt: z
-    .union([z.string(), z.date()])
-    .optional()
-    .nullable()
-    .transform((val) => {
-      if (!val) return null;
-      return typeof val === "string" ? new Date(val) : val;
-    }),
-});
-export type CreateRoleFormValues = z.input<typeof createRoleSchema>; 
-export const updateRoleSchema = createRoleSchema.partial();

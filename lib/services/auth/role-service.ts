@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/dbHelper";
 import { AppResponse } from "@/types/auth/auth";
 import { FetchRolesOptions, RolesWithRelations } from "@/types/auth/role.type";
-import { CreateRoleInput, CreateRoleSchema, UpdateRoleInput, UpdateRoleSchema } from "@/types/role.schema";
+import { CreateRoleFormValues, CreateRoleSchema, UpdateRoleInput, UpdateRoleSchema } from "@/types/role.schema";
 
 
 interface RequestMetadataContext {
@@ -18,7 +18,7 @@ export class RoleService {
    * Provisions a new role with runtime validation and auditing footprints.
    */
   static async createRole(
-    data: CreateRoleInput, 
+    data: CreateRoleFormValues, 
     ctx: RequestMetadataContext
   ): Promise<AppResponse> {
     try {
@@ -28,6 +28,7 @@ export class RoleService {
 
       // 1. Runtime validation using your Zod schema
       const validatedData = CreateRoleSchema.parse(data);
+      console.log("Validated Role Creation Data:", validatedData);
 
       const role = await prisma.$transaction(async (tx) => {
         // 2. Perform the database write operation using type-safe validated fields

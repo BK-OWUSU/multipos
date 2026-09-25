@@ -101,7 +101,7 @@ export class CustomerService {
         return { 
             success: true, 
             message: `Customer ${result.firstName} registered successfully!`, 
-            redirectTo: `/${businessSlug}/customer_base`,
+            redirectTo: `/${businessSlug}/customer-base`,
             status: 200, 
         } as AppResponse;
 
@@ -110,6 +110,9 @@ export class CustomerService {
         return { error: "Internal Server Error", success: false, status: 500 } as AppResponse;
     }
 }
+
+
+
 
 // CREATE BULK CUSTOMERS 
 static async createBulkCustomersService(
@@ -260,7 +263,7 @@ static async createBulkCustomersService(
             success: true,
             message: `Successfully imported ${totalImported} customers with active loyalty settings.`,
             status: 200,
-            redirectTo: `/${businessSlug}/customer_base`,
+            redirectTo: `/${businessSlug}/customer-base`,
         } as AppResponse;
 
     } catch (error: unknown) {
@@ -401,7 +404,8 @@ static async updateCustomer(
   data: Partial<Omit<CustomerImportPayload, 'shop'>> & { registeredAtShopId?: string | null },
   customerId: string, 
   businessId: string, 
-  userId: string 
+  userId: string,
+  ipAddress: string
 ) {
   try {
     const updatedCustomer = await prisma.$transaction(async (tx) => {
@@ -423,6 +427,7 @@ static async updateCustomer(
           userId: userId,
           businessId: businessId,
           newValue: `Updated details for ${customer.firstName} ${customer.lastName}`,
+          ipAddress: ipAddress || null,
         }
       });
 
