@@ -126,7 +126,7 @@ export async function deleteMultipleUser(ids: string[]) {
 
     const { ipAddress } = await getRequestMeta();
     
-    const response = await CustomerService.softDeleteBulkCustomers(ids, userId, businessId, businessSlug,ipAddress);
+    const response = await CustomerService.softDeleteBulkCustomers(ids, businessId, userId, businessSlug,ipAddress);
 
     if (response.success && response.message && response.redirectTo) {
         revalidatePath(response.redirectTo)
